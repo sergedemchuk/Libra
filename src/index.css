@@ -71,3 +71,48 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  /* Brand Gradient Utility Classes with Fallbacks */
+  .bg-brand-gradient {
+    /* Solid color fallback for older browsers */
+    background-color: hsl(var(--gradient-middle));
+    /* Gradient for modern browsers */
+    background: linear-gradient(
+      135deg,
+      hsl(var(--gradient-start)) 0%,
+      hsl(var(--gradient-middle)) 50%,
+      hsl(var(--gradient-end)) 100%
+    );
+  }
+  
+  .bg-brand-gradient-vertical {
+    /* Solid color fallback for older browsers */
+    background-color: hsl(var(--gradient-middle));
+    /* Gradient for modern browsers */
+    background: linear-gradient(
+      to bottom,
+      hsl(var(--gradient-start)) 0%,
+      hsl(var(--gradient-middle)) 50%,
+      hsl(var(--gradient-end)) 100%
+    );
+  }
+  
+  .bg-brand-gradient-radial {
+    /* Solid color fallback for older browsers */
+    background-color: hsl(var(--gradient-middle));
+    /* Gradient for modern browsers */
+    background: radial-gradient(
+      ellipse at center,
+      hsl(var(--gradient-start)) 0%,
+      hsl(var(--gradient-middle)) 50%,
+      hsl(var(--gradient-end)) 100%
+    );
+  }
+
+  /* Additional fallback utility for maximum compatibility */
+  .bg-brand-fallback {
+    background-color: #403c38; /* Medium warm brown - good contrast */
+    background-color: hsl(var(--gradient-middle));
+  }
+}
