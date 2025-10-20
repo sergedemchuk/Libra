@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Brand Colors - Brown/Tan Palette */
+    --background: 28 25 23; /* Rich dark brown */
+    --foreground: 250 249 246; /* Warm off-white */
+    --muted: 68 64 60; /* Medium warm brown */
+    --muted-foreground: 161 161 170;
+    --accent: 120 113 108; /* Light tan/beige */
+    --accent-foreground: 28 25 23;
+    
+    /* UI Colors */
+    --card: 44 39 36; /* Warm dark card background */
+    --card-foreground: 250 249 246;
+    --popover: 44 39 36;
+    --popover-foreground: 250 249 246;
+    --primary: 168 85 43; /* Warm brown primary */
+    --primary-foreground: 250 249 246;
+    --secondary: 68 64 60;
+    --secondary-foreground: 250 249 246;
+    --border: 68 64 60;
+    --input: 68 64 60;
+    --input-background: 44 39 36;
+    --ring: 168 85 43;
+    --destructive: 239 68 68;
+    --destructive-foreground: 250 249 246;
+    
+    /* Brand Gradient Variables */
+    --gradient-start: 28 25 23; /* background */
+    --gradient-middle: 68 64 60; /* muted */
+    --gradient-end: 120 113 108; /* accent */
+    
+    /* Layout */
+    --radius: 0.5rem;
+    --spacing: 0.25rem;
+  }
+
+  .dark {
+    --background: 28 25 23;
+    --foreground: 250 249 246;
+    --muted: 68 64 60;
+    --muted-foreground: 161 161 170;
+    --accent: 120 113 108;
+    --accent-foreground: 28 25 23;
+    --card: 44 39 36;
+    --card-foreground: 250 249 246;
+    --popover: 44 39 36;
+    --popover-foreground: 250 249 246;
+    --primary: 168 85 43;
+    --primary-foreground: 250 249 246;
+    --secondary: 68 64 60;
+    --secondary-foreground: 250 249 246;
+    --border: 68 64 60;
+    --input: 68 64 60;
+    --input-background: 44 39 36;
+    --ring: 168 85 43;
+    --destructive: 239 68 68;
+    --destructive-foreground: 250 249 246;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+  }
+}
