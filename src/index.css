@@ -4,61 +4,56 @@
 
 @layer base {
   :root {
-    /* Brand Colors - Brown/Tan Palette */
-    --background: 28 25 23; /* Rich dark brown */
-    --foreground: 250 249 246; /* Warm off-white */
-    --muted: 68 64 60; /* Medium warm brown */
-    --muted-foreground: 161 161 170;
-    --accent: 120 113 108; /* Light tan/beige */
-    --accent-foreground: 28 25 23;
-    
-    /* UI Colors */
-    --card: 44 39 36; /* Warm dark card background */
-    --card-foreground: 250 249 246;
-    --popover: 44 39 36;
-    --popover-foreground: 250 249 246;
-    --primary: 168 85 43; /* Warm brown primary */
-    --primary-foreground: 250 249 246;
-    --secondary: 68 64 60;
-    --secondary-foreground: 250 249 246;
-    --border: 68 64 60;
-    --input: 68 64 60;
-    --input-background: 44 39 36;
-    --ring: 168 85 43;
-    --destructive: 239 68 68;
-    --destructive-foreground: 250 249 246;
-    
-    /* Brand Gradient Variables */
-    --gradient-start: 28 25 23; /* background */
-    --gradient-middle: 68 64 60; /* muted */
-    --gradient-end: 120 113 108; /* accent */
-    
-    /* Layout */
-    --radius: 0.5rem;
+
+    --background: #f5f2e8;
+    --foreground: #3a2f1f;
+    --card: #f9f6ee;
+    --card-foreground: #3a2f1f;
+    --popover: #f9f6ee;
+    --popover-foreground: #3a2f1f;
+    --primary: #8b4513;
+    --primary-foreground: #f9f6ee;
+    --secondary: #d4c4a8;
+    --secondary-foreground: #3a2f1f;
+    --muted: #e8dcc0;
+    --muted-foreground: #6b5b45;
+    --accent: #deb887;
+    --accent-foreground: #3a2f1f;
+    --destructive: #cd853f;
+    --destructive-foreground: #f9f6ee;
+    --border: rgba(139, 69, 19, 0.2);
+    --input: transparent;
+    --input-background: #f0ead6;
+    --ring: #8b4513;
+
+    --gradient-start: #f5f2e8; /* background */
+    --gradient-middle: #e8dcc0; /* muted */
+    --gradient-end: #deb887; /* accent */
+
+    --radius: 0.625rem;
     --spacing: 0.25rem;
   }
 
   .dark {
-    --background: 28 25 23;
-    --foreground: 250 249 246;
-    --muted: 68 64 60;
-    --muted-foreground: 161 161 170;
-    --accent: 120 113 108;
-    --accent-foreground: 28 25 23;
-    --card: 44 39 36;
-    --card-foreground: 250 249 246;
-    --popover: 44 39 36;
-    --popover-foreground: 250 249 246;
-    --primary: 168 85 43;
-    --primary-foreground: 250 249 246;
-    --secondary: 68 64 60;
-    --secondary-foreground: 250 249 246;
-    --border: 68 64 60;
-    --input: 68 64 60;
-    --input-background: 44 39 36;
-    --ring: 168 85 43;
-    --destructive: 239 68 68;
-    --destructive-foreground: 250 249 246;
+    --background: #f5f2e8;
+    --foreground: #3a2f1f;
+    --muted: #e8dcc0;
+    --muted-foreground: #6b5b45;
+    --accent: #deb887;
+    --accent-foreground: #3a2f1f;
+    --card: #f9f6ee;
+    --card-foreground: #3a2f1f;
+    --popover: #f9f6ee;
+    --popover-foreground: #3a2f1f;
+    --primary: #8b4513;
+    --primary-foreground: #f9f6ee;
+    --secondary: #d4c4a8;
+    --secondary-foreground: #3a2f1f;
+    --border: rgba(139, 69, 19, 0.2);
+    --input: transparent;
+    --ring: #8b4513;
+    --destructive: #cd853f;
+    --destructive-foreground: #f9f6ee;
   }
 }
 
@@ -73,46 +68,44 @@
 }
 
 @layer utilities {
-  /* Brand Gradient Utility Classes with Fallbacks */
   .bg-brand-gradient {
     /* Solid color fallback for older browsers */
-    background-color: hsl(var(--gradient-middle));
+    background-color: var(--gradient-middle);
     /* Gradient for modern browsers */
     background: linear-gradient(
       135deg,
-      hsl(var(--gradient-start)) 0%,
-      hsl(var(--gradient-middle)) 50%,
-      hsl(var(--gradient-end)) 100%
+      var(--gradient-start) 0%,
+      var(--gradient-middle) 50%,
+      var(--gradient-end) 100%
     );
   }
   
   .bg-brand-gradient-vertical {
     /* Solid color fallback for older browsers */
-    background-color: hsl(var(--gradient-middle));
+    background-color: var(--gradient-middle);
     /* Gradient for modern browsers */
     background: linear-gradient(
       to bottom,
-      hsl(var(--gradient-start)) 0%,
-      hsl(var(--gradient-middle)) 50%,
-      hsl(var(--gradient-end)) 100%
+      var(--gradient-start) 0%,
+      var(--gradient-middle) 50%,
+      var(--gradient-end) 100%
     );
   }
   
   .bg-brand-gradient-radial {
     /* Solid color fallback for older browsers */
-    background-color: hsl(var(--gradient-middle));
+    background-color: var(--gradient-middle);
     /* Gradient for modern browsers */
     background: radial-gradient(
       ellipse at center,
-      hsl(var(--gradient-start)) 0%,
-      hsl(var(--gradient-middle)) 50%,
-      hsl(var(--gradient-end)) 100%
+      var(--gradient-start) 0%,
+      var(--gradient-middle) 50%,
+      var(--gradient-end) 100%
     );
   }
 
   /* Additional fallback utility for maximum compatibility */
   .bg-brand-fallback {
-    background-color: #403c38; /* Medium warm brown - good contrast */
-    background-color: hsl(var(--gradient-middle));
+    background-color: var(--gradient-middle);
   }
 }
