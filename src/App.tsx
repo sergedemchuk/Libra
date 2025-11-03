@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import InstructionsBox from "./InstructionsBox";
 import PriceCheckBox from "./PriceCheckbox";
 import PriceAdjustmentBox from "./PriceAdjustmentBox";
+import DownloadExportCard from "./DownloadExportCard";
 
 export default function App() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -61,9 +62,26 @@ export default function App() {
         </div>
 
         {/* Download/Export Section */}
+        <DownloadExportCard />
 
         {/* Processing Summary */}
-
+        {selectedFile && (
+          <section className="rounded-xl border border-primary/20 bg-card/40 p-6 md:p-8">
+            <h3 className="text-lg font-semibold text-foreground mb-3">Processing Summary</h3>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">File:</span>
+                <span className="text-foreground font-medium">{selectedFile.name}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Price Rounding:</span>
+                <span className="text-foreground font-medium">
+                  {priceRounding ? "Enabled" : "Disabled"}
+                </span>
+              </div>
+            </div>
+          </section>
+        )}
       </div>
     </div>
   );
