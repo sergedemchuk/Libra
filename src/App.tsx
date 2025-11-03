@@ -1,23 +1,17 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import InstructionsBox from "./InstructionsBox";
-import PriceCheckBox from "./PriceCheckbox";
+import PriceCheckBox from "./PriceCheckBox";
 import PriceAdjustmentBox from "./PriceAdjustmentBox";
 import DownloadExportCard from "./DownloadExportCard";
+import UploadImportCard from "./UploadImportCard";
 
 export default function App() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [priceRounding, setPriceRounding] = useState<boolean>(false);
-  
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-    }
+  const handleFileSelected = (file: File | null) => {
+    setSelectedFile(file);
   };
-
-  const handleUploadClick = () => fileInputRef.current?.click();
 
   const handlePriceRoundingChange = (checked: boolean) => {
     setPriceRounding(checked);
@@ -41,6 +35,7 @@ export default function App() {
         <InstructionsBox />
 
         {/* File Upload Section */}
+        <UploadImportCard onFileSelect={handleFileSelected} />
 
         {/* Configuration Options */}
         <div className="space-y-6">
