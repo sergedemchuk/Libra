@@ -3,6 +3,8 @@
 [![Build Status](https://img.shields.io/badge/build-In_Progress-yellow.svg)](https://github.com/sergedemchuk/libra/actions)
 [![Version](https://img.shields.io/badge/version-0.0.3-orange.svg)](https://github.com/sergedemchuk/libra/releases)
 
+<img width="913" height="324" alt="image" src="https://github.com/user-attachments/assets/32332608-623f-4617-a830-c7316e5bddb4" />
+
 > A modern library management tool for updating book catalog data with accurate pricing info for Destiny library systems
 
 ## Table of Contents
