@@ -8,6 +8,7 @@ import UploadImportCard from "./UploadImportCard";
 export default function App() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [priceRounding, setPriceRounding] = useState<boolean>(false);
+  const [price, setPrice] = useState<number>(0.00);
 
   const handleFileSelected = (file: File | null) => {
     setSelectedFile(file);
@@ -53,6 +54,9 @@ export default function App() {
             label="Price Adjustment"
             descriptionEmpty="Empty: No adjustment applied to calculated prices."
             descriptionFilled="Filled: Adds the specified amount to all calculated prices."
+            value={price}
+            onChange={setPrice}
+            step={0.01}
           />
         </div>
 
