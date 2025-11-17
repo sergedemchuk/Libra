@@ -4,6 +4,7 @@ import PriceCheckBox from "./PriceCheckBox";
 import PriceAdjustmentBox from "./PriceAdjustmentBox";
 import DownloadExportCard from "./DownloadExportCard";
 import UploadImportCard from "./UploadImportCard";
+import ParameterTitleAndDescription from "./ParameterDescription";
 
 export default function App() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -39,15 +40,9 @@ export default function App() {
         <UploadImportCard onFileSelect={handleFileSelected} />
 
         {/* Configuration Options */}
-        <div className="space-y-6">
-          {/* Price Processing Options */}
-          <PriceCheckBox
-            label="Price Processing Options"
-            descriptionRounded="Checked (Rounded): Prices rounded up to the nearest dollar ($24.16 → $25.00)."
-            descriptionUnchanged="Unchecked (Unrounded): Preserves exact calculated prices."
-            initialChecked={priceRounding}
-            onChange={handlePriceRoundingChange}
-          />
+        <section className = "rounded-xl border border-primary/20 bg-card/40 p-6 md:p-6">
+          <div className="space-y-3">
+
 
           {/* Price Adjustment */}
           <PriceAdjustmentBox
@@ -59,6 +54,29 @@ export default function App() {
             step={0.01}
           />
         </div>
+            {/*Parameter Settings and description*/}
+            <ParameterTitleAndDescription
+             Description = "Configure pricing adustments and Processing Options"
+            />
+
+            {/* Price Processing Options */}
+            <PriceCheckBox
+              label="Price Processing Options"
+              descriptionRounded="Checked (Rounded): Prices rounded up to the nearest dollar ($24.16 → $25.00)."
+              descriptionUnchanged="Unchecked (Unrounded): Preserves exact calculated prices."
+              initialChecked={priceRounding}
+              onChange={handlePriceRoundingChange}
+            />
+
+            {/* Price Adjustment */}
+            <PriceAdjustmentBox
+              label="Price Adjustment"
+              descriptionEmpty="Empty: No adjustment applied to calculated prices."
+              descriptionFilled="Filled: Adds the specified amount to all calculated prices."
+            />
+            
+          </div>
+        </section>
 
         {/* Download/Export Section */}
         <DownloadExportCard />
