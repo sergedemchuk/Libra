@@ -94,6 +94,9 @@ Visit `http://localhost:3000` to access the application.(Default Value)
 
 
 ## Usage
+User flow of Pages:
+<img width="2500" height="537" alt="ERD_User flow" src="https://github.com/user-attachments/assets/fb2c9814-d3e6-4d3f-b800-cb82d98e6e4e" />
+
 
 ### Accessing the Application
 
@@ -155,5 +158,6 @@ Sprint 6: Implementation of Account Management user features and tools
 Sprint 7: Implementation of Account Management core functionality, enabling the creation, alteration and deletion.
 
 Sprint 8: Implementation of the catalog Data Pages' menu functionality and features
+
 
 
