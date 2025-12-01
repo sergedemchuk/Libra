@@ -97,9 +97,16 @@ Visit `http://localhost:3000` to access the application.(Default Value)
 ### Accessing the Application
 
 1. **Login**: Use the login page to authenticate with your credentials
+<img width="681" height="782" alt="image" src="https://github.com/user-attachments/assets/c2ddcb0f-a8ca-4cfe-bd21-5dec5a91b74b" />
+
 2. **Dashboard**: Navigate to the main dashboard after successful login
+<img width="2210" height="744" alt="image" src="https://github.com/user-attachments/assets/50ed2384-5e15-4a85-8e89-e444f728e130" />
+
 3. **Upload Catalog Data**: Use the "Upload Catalog Data" section to process library files
+<img width="1908" height="880" alt="image" src="https://github.com/user-attachments/assets/c41752ac-87e7-495f-99c1-d2fecdff7fef" />
+
 4. **Account Management**: Manage user accounts through the account management interface
+<img width="1908" height="701" alt="image" src="https://github.com/user-attachments/assets/f2e7647a-ae12-437e-a174-c116d8209a5c" />
 
 ### File Upload Process
 
@@ -125,4 +132,26 @@ Visit `http://localhost:3000` to access the application.(Default Value)
 ## Developer Instructions
 
 **[Comprehensive developer guides, API references, architecture diagrams, and contribution guidelines to be expanded]**
+
+## TimeLine of Key Milestones:
+
+### Completed
+
+Sprint 1: Setup of the Jira work environment and other tools used for this project
+
+Sprint 2: Initialization of project files coupled with the implementation Tailwind CSS configuration and the products background screen
+
+Sprint 3: Implemented the general page layout including text and graphical elements
+
+Sprint 4: Implemented some AWS functionality as well as additional graphical elements as well as some button implementation.
+
+### To-Do
+
+Sprint 5: Implementation of key login screen functions
+
+Sprint 6: Implementation of Account Management user features and tools
+
+Sprint 7: Implementation of Account Management core functionality, enabling the creation, alteration and deletion.
+
+Sprint 8: Implementation of the catalog Data Pages' menu functionality and features
 
