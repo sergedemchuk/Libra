@@ -43,7 +43,8 @@ The application features secure user authentication, file upload capabilities fo
 - **Networking**: Route 53 DNS, CloudFront CDN
 - **Storage**: S3 Buckets, DynamoDB 
 - **Processing**: Lambda
-
+### ERD Backend
+<img width="2386" height="1549" alt="ERD BACKEND" src="https://github.com/user-attachments/assets/aa8d649e-df1a-4b6a-b646-608257750524" />
 
 ## Features
 
@@ -154,4 +155,5 @@ Sprint 6: Implementation of Account Management user features and tools
 Sprint 7: Implementation of Account Management core functionality, enabling the creation, alteration and deletion.
 
 Sprint 8: Implementation of the catalog Data Pages' menu functionality and features
+
 
