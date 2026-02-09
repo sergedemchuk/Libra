@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import InstructionsBox from "./InstructionsBox";
 import PriceCheckBox from "./PriceCheckBox";
 import PriceAdjustmentBox from "./PriceAdjustmentBox";
@@ -6,12 +6,39 @@ import DownloadExportCard from "./DownloadExportCard";
 import UploadImportCard from "./UploadImportCard";
 import ParameterTitleAndDescription from "./ParameterDescription";
 import MenuBar, { PageKey } from "./MenuBar";
+import LoginPage from "./LoginPage";
 
 export default function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [priceRounding, setPriceRounding] = useState<boolean>(false);
   const [priceAdjustment, setPriceAdjustment] = useState<number>(0.0);
   const [activePage, setActivePage] = useState<PageKey>("upload");
+
+  // Check for existing session on mount
+  useEffect(() => {
+    const hasSession = localStorage.getItem("libra_remember") === "true";
+    setIsAuthenticated(hasSession);
+  }, []);
+
+  const handleLoginSuccess = () => {
+    setIsAuthenticated(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("libra_remember");
+    setIsAuthenticated(false);
+    // Reset state on logout
+    setSelectedFile(null);
+    setPriceRounding(false);
+    setPriceAdjustment(0.0);
+    setActivePage("upload");
+  };
+
+  // Show login page if not authenticated
+  if (!isAuthenticated) {
+    return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+  }
 
   const handleFileSelected = (file: File | null) => {
     setSelectedFile(file);
@@ -25,7 +52,11 @@ export default function App() {
   return (
     <div className="min-h-screen bg-brand-gradient">
       {/* Top menu bar (visible on both pages) */}
-      <MenuBar activePage={activePage} onPageChange={setActivePage} />
+      <MenuBar 
+        activePage={activePage} 
+        onPageChange={setActivePage}
+        onLogout={handleLogout}
+      />
 
       {/* Page content */}
       <div className="mx-auto max-w-4xl px-5 py-10 md:py-12 space-y-8">
