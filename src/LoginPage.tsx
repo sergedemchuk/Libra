@@ -47,12 +47,28 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
           <h2 className="text-xl font-semibold text-foreground mb-6">
             Sign in to your account
           </h2>
-
-
-
-
-
-          {/* Creat Account */}
+            {/* Remember Me */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <input
+                  id="remember-me"
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="w-4 h-4 rounded border-accent focus:ring-2 focus:ring-primary cursor-pointer"
+                  style={{ accentColor: "var(--primary)" }}
+                  disabled={isLoading}
+                />
+                <label
+                  htmlFor="remember-me"
+                  className="text-sm text-muted-foreground cursor-pointer select-none"
+                >
+                  Remember me
+                </label>
+              </div>
+            </div>
+            
+          {/* Create Account */}
           <div className="mt-6 pt-6 border-t border-primary/10 text-center">
             <p className="text-sm text-muted-foreground">
               Don't have an account?{" "}
