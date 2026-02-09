@@ -91,6 +91,27 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
               />
             </div>
 
+            {/* Password Field */}
+            <div>
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-foreground mb-2"
+              >
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete="current-password"
+                className="w-full px-4 py-2.5 rounded-lg border border-primary/20 bg-input-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                placeholder="••••••••"
+                disabled={isLoading}
+              />
+            </div>
+
             {/* Remember Me & Forgot Password */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -180,7 +201,7 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
         {/* Footer */}
         <div className="mt-8 text-center">
           <p className="text-xs text-muted-foreground">
-            Â© 2026 The Compilers 
+            © 2026 The Compilers 
           </p>
         </div>
       </div>
