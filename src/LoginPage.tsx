@@ -47,7 +47,7 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
           <h2 className="text-xl font-semibold text-foreground mb-6">
             Sign in to your account
           </h2>
-            {/* Remember Me */}
+            {/* Remember Me & Forgot Password */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <input
@@ -66,8 +66,15 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
                   Remember me
                 </label>
               </div>
+              <button
+                type="button"
+                className="text-sm text-primary hover:text-primary/80 font-medium transition-colors"
+                disabled={isLoading}
+              >
+                Forgot password?
+              </button>
             </div>
-            
+
           {/* Create Account */}
           <div className="mt-6 pt-6 border-t border-primary/10 text-center">
             <p className="text-sm text-muted-foreground">
@@ -86,7 +93,7 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
         {/* Footer */}
         <div className="mt-8 text-center">
           <p className="text-xs text-muted-foreground">
-            Â© 2026 The Compilers 
+            © 2026 The Compilers 
           </p>
         </div>
       </div>
