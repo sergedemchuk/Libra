@@ -8,6 +8,7 @@ import ParameterTitleAndDescription from "./ParameterDescription";
 import MenuBar, { PageKey } from "./MenuBar";
 import LoginPage from "./LoginPage";
 import AccountManagementPage from "./AccountManagementPage";
+import { useFileUpload } from "./hooks/useFileUpload";
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -17,27 +18,27 @@ export default function App() {
   const [activePage, setActivePage] = useState<PageKey>("upload");
   const [currentView, setCurrentView] = useState<"home" | "account">("home");
 
+  const { state: uploadState, start: startUpload, reset: resetUpload } = useFileUpload();
+
   // Check for existing session on mount
   useEffect(() => {
     const hasSession = localStorage.getItem("libra_remember") === "true";
     setIsAuthenticated(hasSession);
   }, []);
 
-  const handleLoginSuccess = () => {
-    setIsAuthenticated(true);
-  };
+  const handleLoginSuccess = () => setIsAuthenticated(true);
 
   const handleLogout = () => {
     localStorage.removeItem("libra_remember");
     setIsAuthenticated(false);
-    // Reset state on logout
     setSelectedFile(null);
     setPriceRounding(false);
     setPriceAdjustment(0.0);
     setActivePage("upload");
+    setCurrentView("home");
+    resetUpload();
   };
 
-  // Show login page if not authenticated
   if (!isAuthenticated) {
     return <LoginPage onLoginSuccess={handleLoginSuccess} />;
   }
@@ -52,6 +53,8 @@ export default function App() {
 
   const handleFileSelected = (file: File | null) => {
     setSelectedFile(file);
+    // If user swaps the file, reset any prior upload state
+    if (file) resetUpload();
   };
 
   const handlePriceRoundingChange = (checked: boolean) => {
@@ -59,20 +62,37 @@ export default function App() {
     console.log("Price rounding enabled:", checked);
   };
 
+  /** Called when the user clicks "Process File" inside UploadImportCard */
+  const handleProcessFile = () => {
+    if (!selectedFile) return;
+
+    const settings = {
+      priceRounding,
+      // Only include priceAdjustment when it is a meaningful non-zero value
+      ...(priceAdjustment !== 0 && !Number.isNaN(priceAdjustment)
+        ? { priceAdjustment }
+        : {}),
+    };
+
+    startUpload(selectedFile, settings);
+  };
+
+  const isProcessing =
+    uploadState.phase === "initiating" ||
+    uploadState.phase === "uploading" ||
+    uploadState.phase === "processing";
+
   return (
     <div className="min-h-screen bg-brand-gradient">
-      {/* Top menu bar (visible on both pages) */}
-      <MenuBar 
-        activePage={activePage} 
+      <MenuBar
+        activePage={activePage}
         onPageChange={setActivePage}
         onLogout={handleLogout}
       />
 
-      {/* Page content */}
       <div className="mx-auto max-w-4xl px-5 py-10 md:py-12 space-y-8">
         {activePage === "upload" ? (
           <>
-            {/* Page Header */}
             <header className="mb-6">
               <h1 className="text-2xl md:text-3xl font-semibold text-foreground">
                 Upload Catalog Data
@@ -82,44 +102,47 @@ export default function App() {
               </p>
             </header>
 
-            {/* Instructions */}
             <InstructionsBox />
 
-            {/* File Upload Section */}
-            <UploadImportCard onFileSelect={handleFileSelected} />
+            {/* File Upload — pass upload state so it can show progress */}
+            <UploadImportCard
+              onFileSelect={handleFileSelected}
+              uploadState={uploadState}
+              onProcessFile={handleProcessFile}
+              onReset={resetUpload}
+            />
 
-            {/* Configuration Options */}
-            <div className="space-y-6">
-              {/* Parameter Settings and description */}
-              <ParameterTitleAndDescription
-                Description="Configure pricing adjustments and processing options"
-              />
+            {/* Only show parameter options while not actively processing */}
+            {uploadState.phase === "idle" || uploadState.phase === "error" ? (
+              <div className="space-y-6">
+                <ParameterTitleAndDescription
+                  Description="Configure pricing adjustments and processing options"
+                />
 
-              {/* Price Processing Options */}
-              <PriceCheckBox
-                label="Price Processing Options"
-                descriptionRounded="Checked (Rounded): Prices rounded up to the nearest dollar ($24.16 → $25.00)."
-                descriptionUnchanged="Unchecked (Unrounded): Preserves exact calculated prices."
-                initialChecked={priceRounding}
-                onChange={handlePriceRoundingChange}
-              />
+                <PriceCheckBox
+                  label="Price Processing Options"
+                  descriptionRounded="Checked (Rounded): Prices rounded up to the nearest dollar ($24.16 → $25.00)."
+                  descriptionUnchanged="Unchecked (Unrounded): Preserves exact calculated prices."
+                  initialChecked={priceRounding}
+                  onChange={handlePriceRoundingChange}
+                />
 
-              {/* Price Adjustment */}
-              <PriceAdjustmentBox
-                label="Price Adjustment"
-                descriptionEmpty="Empty: No adjustment applied to calculated prices."
-                descriptionFilled="Filled: Adds the specified amount to all calculated prices."
-                value={priceAdjustment}
-                onChange={setPriceAdjustment}
-                step={0.01}
-              />
-            </div>
+                <PriceAdjustmentBox
+                  label="Price Adjustment"
+                  descriptionEmpty="Empty: No adjustment applied to calculated prices."
+                  descriptionFilled="Filled: Adds the specified amount to all calculated prices."
+                  value={priceAdjustment}
+                  onChange={setPriceAdjustment}
+                  step={0.01}
+                />
+              </div>
+            ) : null}
 
-            {/* Download/Export Section */}
-            <DownloadExportCard />
+            {/* Download card — only shows action when job is done */}
+            <DownloadExportCard uploadState={uploadState} />
 
-            {/* Processing Summary */}
-            {selectedFile && (
+            {/* Processing summary — shows while selecting / before upload */}
+            {selectedFile && uploadState.phase === "idle" && (
               <section className="rounded-xl border border-primary/20 bg-card/40 p-6 md:p-8">
                 <h3 className="text-lg font-semibold text-foreground mb-3">
                   Processing Summary
@@ -127,9 +150,7 @@ export default function App() {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">File:</span>
-                    <span className="text-foreground font-medium">
-                      {selectedFile.name}
-                    </span>
+                    <span className="text-foreground font-medium">{selectedFile.name}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Price Rounding:</span>
@@ -138,9 +159,7 @@ export default function App() {
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">
-                      Price Adjustment:
-                    </span>
+                    <span className="text-muted-foreground">Price Adjustment:</span>
                     <span className="text-foreground font-medium">
                       ${priceAdjustment.toFixed(2)}
                     </span>

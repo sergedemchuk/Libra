@@ -1,0 +1,22 @@
+{
+  "name": "job-status-lambda",
+  "version": "1.0.0",
+  "description": "Lambda function to check job status and provide download URLs",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "package": "npm run build && zip -r function.zip dist/ node_modules/",
+    "deploy": "aws lambda update-function-code --function-name library-catalog-status --zip-file fileb://function.zip"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.450.0",
+    "@aws-sdk/client-dynamodb": "^3.450.0",
+    "@aws-sdk/s3-request-presigner": "^3.450.0",
+    "@aws-sdk/util-dynamodb": "^3.450.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}

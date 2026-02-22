@@ -22,3 +22,29 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+*:Zone.Identifier
+
+# Environment / secrets
+.env
+.env.local
+.env.*.local
+*.env
+
+# AWS credentials
+.aws/
+
+# CDK
+infrastructure/cdk.out/
+
+# Node
+node_modules/
+dist/
+
+# Lambda build artifacts
+lambda/upload/dist/
+lambda/status/dist/
+lambda/process-csv/dist/
+
+# OS
+.DS_Store
+Thumbs.db
