@@ -7,6 +7,7 @@ import UploadImportCard from "./UploadImportCard";
 import ParameterTitleAndDescription from "./ParameterDescription";
 import MenuBar, { PageKey } from "./MenuBar";
 import LoginPage from "./LoginPage";
+import AccountManagementPage from "./AccountManagementPage";
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -14,6 +15,7 @@ export default function App() {
   const [priceRounding, setPriceRounding] = useState<boolean>(false);
   const [priceAdjustment, setPriceAdjustment] = useState<number>(0.0);
   const [activePage, setActivePage] = useState<PageKey>("upload");
+  const [currentView, setCurrentView] = useState<"home" | "account">("home");
 
   // Check for existing session on mount
   useEffect(() => {
@@ -38,6 +40,14 @@ export default function App() {
   // Show login page if not authenticated
   if (!isAuthenticated) {
     return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+  }
+
+  if (currentView === "account") {
+    return (
+      <AccountManagementPage
+        onBack={() => setCurrentView("home")}
+      />
+    );
   }
 
   const handleFileSelected = (file: File | null) => {
@@ -140,16 +150,7 @@ export default function App() {
             )}
           </>
         ) : (
-          // Account Management placeholder page
-          <section className="rounded-xl border border-primary/20 bg-card/40 p-6 md:p-8 shadow-sm">
-            <h2 className="text-lg font-semibold text-foreground mb-2">
-              Account Management
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              Account management tools will be available here in a future
-              update.
-            </p>
-          </section>
+          <AccountManagementPage onBack={() => setActivePage("upload")} />
         )}
       </div>
     </div>
