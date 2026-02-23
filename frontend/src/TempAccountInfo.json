@@ -1,0 +1,7 @@
+[
+    {"EMAIL": "testemail1@gmail.com", "DATECREATED": "01-01-2026", "LASTLOGIN": "02-20-2026"},
+
+    {"EMAIL": "testemail2@gmail.com", "DATECREATED": "10-01-2026", "LASTLOGIN": "11-25-2026"},
+
+    {"EMAIL": "testemail3@gmail.com", "DATECREATED": "02-30-2026", "LASTLOGIN": "12-01-2026"}
+]

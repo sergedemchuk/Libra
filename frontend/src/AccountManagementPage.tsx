@@ -1,4 +1,5 @@
 import React from "react";
+import AccountInfo from "./ListAccountInfo.tsx";
 
 export default function AccountManagementPage() {
   const handleBack = () => {
@@ -87,9 +88,63 @@ export default function AccountManagementPage() {
           </button>
         </div>
 
-        <p className="mt-3 text-sm text-muted-foreground">
-          Account management tools will be available here in a future update.
-        </p>
+
+        
+
+        {/* Section below displays eaccount info and options to edit it */}
+
+        {/* All accounts TODO: add decorative images*/}
+            <div className= "border border-[#753114]/20 rounded-xl bg-white/30 pt-3 mt-10 shadow-sm">
+
+              {/* Main Title */}
+              <div className="flex">
+
+                <div className="flex-none">
+                  {/*image goes here*/}
+                </div>
+
+                <h1 className="flex-1 pl-5 text-primary/70 text-serif font-semibold">
+                  All Accounts
+                </h1>
+
+              </div>
+                <h2 className="flex-none pl-3 text-primary/50 text-mono">
+                  Manage existing accounts here
+                </h2>
+              {/* info and description*/}
+              <div className="border border-[#753114]/20 rounded-xl bg-white/30 pt-3 mt-5 shadow-sm m-10">
+
+                <div className="grid grid-cols-4 text-center text-serif font-bold gap-x-20">
+
+                  <h1 className="pl-3 text-left">
+                    Email
+                  </h1>
+                  <h1 className="text-center">
+                    created
+                  </h1>
+                  <h1 className="text-center">
+                    Last Login
+                  </h1>
+                  <h1 className="pr-3 text-right">
+                    Action
+                  </h1>
+
+                </div>
+
+                {/*TODO: Add button functionality in this file*/}
+                <div>
+
+                  <AccountInfo />
+
+                </div>
+
+                {/* necessary do not remove */}
+                <div className = "m-10"></div>
+
+              </div>
+
+            </div>
+
       </div>
     </div>
   );
