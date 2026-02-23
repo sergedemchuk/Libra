@@ -1,11 +1,11 @@
 import React from "react";
 import AccountInfo from "./ListAccountInfo.tsx";
 
-export default function AccountManagementPage() {
-  const handleBack = () => {
-    window.history.back();
-  };
+interface AccountManagementPageProps {
+  onBack: () => void;
+}
 
+export default function AccountManagementPage({ onBack }: AccountManagementPageProps) {
   const handleCreateAccount = () => {
     return;
   };
@@ -72,7 +72,7 @@ export default function AccountManagementPage() {
         </div>
       </div>
 
-      {/* PLACEHOLDER SECTION */}
+      {/* ACCOUNT LIST SECTION */}
       <div className="mt-6 rounded-2xl border border-border bg-card/40 p-6 md:p-8 shadow-sm">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold text-foreground">
@@ -81,70 +81,49 @@ export default function AccountManagementPage() {
 
           <button
             type="button"
-            onClick={handleBack}
+            onClick={onBack}
             className="text-sm font-medium text-foreground hover:opacity-80 transition-opacity"
           >
             ← Back
           </button>
         </div>
 
+        {/* All Accounts */}
+        <div className="border border-[#753114]/20 rounded-xl bg-white/30 pt-3 mt-10 shadow-sm">
 
-        
+          {/* Main Title */}
+          <div className="flex">
+            <div className="flex-none">
+              {/* image goes here */}
+            </div>
+            <h1 className="flex-1 pl-5 text-primary/70 text-serif font-semibold">
+              All Accounts
+            </h1>
+          </div>
 
-        {/* Section below displays eaccount info and options to edit it */}
+          <h2 className="flex-none pl-3 text-primary/50 text-mono">
+            Manage existing accounts here
+          </h2>
 
-        {/* All accounts TODO: add decorative images*/}
-            <div className= "border border-[#753114]/20 rounded-xl bg-white/30 pt-3 mt-10 shadow-sm">
+          {/* Table */}
+          <div className="border border-[#753114]/20 rounded-xl bg-white/30 pt-3 mt-5 shadow-sm m-10">
 
-              {/* Main Title */}
-              <div className="flex">
-
-                <div className="flex-none">
-                  {/*image goes here*/}
-                </div>
-
-                <h1 className="flex-1 pl-5 text-primary/70 text-serif font-semibold">
-                  All Accounts
-                </h1>
-
-              </div>
-                <h2 className="flex-none pl-3 text-primary/50 text-mono">
-                  Manage existing accounts here
-                </h2>
-              {/* info and description*/}
-              <div className="border border-[#753114]/20 rounded-xl bg-white/30 pt-3 mt-5 shadow-sm m-10">
-
-                <div className="grid grid-cols-4 text-center text-serif font-bold gap-x-20">
-
-                  <h1 className="pl-3 text-left">
-                    Email
-                  </h1>
-                  <h1 className="text-center">
-                    created
-                  </h1>
-                  <h1 className="text-center">
-                    Last Login
-                  </h1>
-                  <h1 className="pr-3 text-right">
-                    Action
-                  </h1>
-
-                </div>
-
-                {/*TODO: Add button functionality in this file*/}
-                <div>
-
-                  <AccountInfo />
-
-                </div>
-
-                {/* necessary do not remove */}
-                <div className = "m-10"></div>
-
-              </div>
-
+            <div className="grid grid-cols-4 text-center text-serif font-bold gap-x-20">
+              <h1 className="pl-3 text-left">Email</h1>
+              <h1 className="text-center">Created</h1>
+              <h1 className="text-center">Last Login</h1>
+              <h1 className="pr-3 text-right">Action</h1>
             </div>
 
+            <div>
+              <AccountInfo />
+            </div>
+
+            {/* necessary do not remove */}
+            <div className="m-10"></div>
+
+          </div>
+        </div>
       </div>
     </div>
   );

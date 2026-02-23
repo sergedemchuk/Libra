@@ -16,7 +16,6 @@ export default function App() {
   const [priceRounding, setPriceRounding] = useState<boolean>(false);
   const [priceAdjustment, setPriceAdjustment] = useState<number>(0.0);
   const [activePage, setActivePage] = useState<PageKey>("upload");
-  const [currentView, setCurrentView] = useState<"home" | "account">("home");
 
   const { state: uploadState, start: startUpload, reset: resetUpload } = useFileUpload();
 
@@ -35,7 +34,6 @@ export default function App() {
     setPriceRounding(false);
     setPriceAdjustment(0.0);
     setActivePage("upload");
-    setCurrentView("home");
     resetUpload();
   };
 
@@ -43,17 +41,8 @@ export default function App() {
     return <LoginPage onLoginSuccess={handleLoginSuccess} />;
   }
 
-  if (currentView === "account") {
-    return (
-      <AccountManagementPage
-        onBack={() => setCurrentView("home")}
-      />
-    );
-  }
-
   const handleFileSelected = (file: File | null) => {
     setSelectedFile(file);
-    // If user swaps the file, reset any prior upload state
     if (file) resetUpload();
   };
 
@@ -62,13 +51,11 @@ export default function App() {
     console.log("Price rounding enabled:", checked);
   };
 
-  /** Called when the user clicks "Process File" inside UploadImportCard */
   const handleProcessFile = () => {
     if (!selectedFile) return;
 
     const settings = {
       priceRounding,
-      // Only include priceAdjustment when it is a meaningful non-zero value
       ...(priceAdjustment !== 0 && !Number.isNaN(priceAdjustment)
         ? { priceAdjustment }
         : {}),
@@ -76,11 +63,6 @@ export default function App() {
 
     startUpload(selectedFile, settings);
   };
-
-  const isProcessing =
-    uploadState.phase === "initiating" ||
-    uploadState.phase === "uploading" ||
-    uploadState.phase === "processing";
 
   return (
     <div className="min-h-screen bg-brand-gradient">
@@ -91,7 +73,10 @@ export default function App() {
       />
 
       <div className="mx-auto max-w-4xl px-5 py-10 md:py-12 space-y-8">
-        {activePage === "upload" ? (
+        {activePage === "account" ? (
+          // Account management page rendered inside the same layout shell
+          <AccountManagementPage onBack={() => setActivePage("upload")} />
+        ) : (
           <>
             <header className="mb-6">
               <h1 className="text-2xl md:text-3xl font-semibold text-foreground">
@@ -104,7 +89,6 @@ export default function App() {
 
             <InstructionsBox />
 
-            {/* File Upload — pass upload state so it can show progress */}
             <UploadImportCard
               onFileSelect={handleFileSelected}
               uploadState={uploadState}
@@ -112,7 +96,6 @@ export default function App() {
               onReset={resetUpload}
             />
 
-            {/* Only show parameter options while not actively processing */}
             {uploadState.phase === "idle" || uploadState.phase === "error" ? (
               <div className="space-y-6">
                 <ParameterTitleAndDescription
@@ -138,10 +121,8 @@ export default function App() {
               </div>
             ) : null}
 
-            {/* Download card — only shows action when job is done */}
             <DownloadExportCard uploadState={uploadState} />
 
-            {/* Processing summary — shows while selecting / before upload */}
             {selectedFile && uploadState.phase === "idle" && (
               <section className="rounded-xl border border-primary/20 bg-card/40 p-6 md:p-8">
                 <h3 className="text-lg font-semibold text-foreground mb-3">
@@ -168,8 +149,6 @@ export default function App() {
               </section>
             )}
           </>
-        ) : (
-          <AccountManagementPage onBack={() => setActivePage("upload")} />
         )}
       </div>
     </div>
