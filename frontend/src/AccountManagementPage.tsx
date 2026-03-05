@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import AccountInfo from "./ListAccountInfo.tsx";
 
 interface AccountManagementPageProps {
@@ -6,6 +6,8 @@ interface AccountManagementPageProps {
 }
 
 export default function AccountManagementPage({ onBack }: AccountManagementPageProps) {
+  const [emailOnCreate, setEmailOnCreate] = useState<boolean>(false);
+
   const handleCreateAccount = () => {
     return;
   };
@@ -67,6 +69,81 @@ export default function AccountManagementPage({ onBack }: AccountManagementPageP
                 <path d="M5 12h14" />
               </svg>
               Create Account
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* NOTIFICATIONS SECTION */}
+      <div className="mt-6 rounded-2xl border border-border bg-card/40 p-6 md:p-8 shadow-sm">
+        <div className="flex items-center gap-3 mb-4">
+          {/* Bell icon */}
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10">
+            <svg
+              className="h-5 w-5 text-primary"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold text-foreground">
+              Notifications
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Configure how you receive alerts about account activity
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-4 mt-5">
+          {/* Email on Account Creation toggle */}
+          <div className="flex items-center justify-between rounded-xl border border-[#753114]/20 bg-white/30 px-5 py-4">
+            <div className="flex items-center gap-3">
+              {/* Mail icon */}
+              <svg
+                className="h-5 w-5 text-primary/70"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect x="2" y="4" width="20" height="16" rx="2" />
+                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+              </svg>
+              <div>
+                <p className="text-sm font-semibold text-foreground">
+                  Email on Account Creation
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Receive an email notification when a new account is created
+                </p>
+              </div>
+            </div>
+
+            {/* Toggle switch */}
+            <button
+              type="button"
+              role="switch"
+              aria-checked={emailOnCreate}
+              onClick={() => setEmailOnCreate(!emailOnCreate)}
+              className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
+                emailOnCreate ? "bg-primary" : "bg-muted"
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform duration-200 ease-in-out ${
+                  emailOnCreate ? "translate-x-5" : "translate-x-1"
+                }`}
+              />
             </button>
           </div>
         </div>
