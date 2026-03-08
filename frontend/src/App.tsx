@@ -9,6 +9,7 @@ import MenuBar, { PageKey } from "./MenuBar";
 import LoginPage from "./LoginPage";
 import AccountManagementPage from "./AccountManagementPage";
 import { useFileUpload } from "./hooks/useFileUpload";
+import CreateAccount from "./CreateAccount";
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -19,7 +20,6 @@ export default function App() {
 
   const { state: uploadState, start: startUpload, reset: resetUpload } = useFileUpload();
 
-  // Check for existing session on mount
   useEffect(() => {
     const hasSession = localStorage.getItem("libra_remember") === "true";
     setIsAuthenticated(hasSession);
@@ -64,6 +64,10 @@ export default function App() {
     startUpload(selectedFile, settings);
   };
 
+  if (activePage === "createAccount") {
+  return <CreateAccount onBack={() => setActivePage("upload")} />;
+  } 
+
   return (
     <div className="min-h-screen bg-brand-gradient">
       <MenuBar
@@ -73,10 +77,7 @@ export default function App() {
       />
 
       <div className="mx-auto max-w-4xl px-5 py-10 md:py-12 space-y-8">
-        {activePage === "account" ? (
-          // Account management page rendered inside the same layout shell
-          <AccountManagementPage onBack={() => setActivePage("upload")} />
-        ) : (
+        {activePage === "upload" && (
           <>
             <header className="mb-6">
               <h1 className="text-2xl md:text-3xl font-semibold text-foreground">
@@ -131,7 +132,9 @@ export default function App() {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">File:</span>
-                    <span className="text-foreground font-medium">{selectedFile.name}</span>
+                    <span className="text-foreground font-medium">
+                      {selectedFile.name}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Price Rounding:</span>
@@ -149,6 +152,10 @@ export default function App() {
               </section>
             )}
           </>
+        )}
+
+        {activePage === "account" && (
+          <AccountManagementPage onBack={() => setActivePage("upload")} />
         )}
       </div>
     </div>

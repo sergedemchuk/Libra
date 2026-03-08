@@ -1,6 +1,6 @@
 // MenuBar.tsx
 
-export type PageKey = "upload" | "account";
+export type PageKey = "upload" | "account" | "createAccount";
 
 interface MenuBarProps {
   activePage: PageKey;
@@ -8,7 +8,11 @@ interface MenuBarProps {
   onLogout?: () => void;
 }
 
-export default function MenuBar({ activePage, onPageChange, onLogout }: MenuBarProps) {
+export default function MenuBar({
+  activePage,
+  onPageChange,
+  onLogout,
+}: MenuBarProps) {
   const makeButtonClasses = (isActive: boolean) =>
     [
       "inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors border",
@@ -28,9 +32,7 @@ export default function MenuBar({ activePage, onPageChange, onLogout }: MenuBarP
     >
       <div className="mx-auto max-w-4xl px-5 py-3 flex items-center justify-between">
         {/* Left: app title / logo */}
-        <div className="text-sm font-semibold text-foreground">
-          Libra
-        </div>
+        <div className="text-sm font-semibold text-foreground">Libra</div>
 
         {/* Center: page switch buttons */}
         <div className="flex items-center gap-2">
@@ -41,7 +43,6 @@ export default function MenuBar({ activePage, onPageChange, onLogout }: MenuBarP
             className={makeButtonClasses(activePage === "upload")}
             onClick={() => onPageChange("upload")}
           >
-            {/* Upload icon */}
             <svg
               aria-hidden="true"
               focusable="false"
@@ -67,7 +68,6 @@ export default function MenuBar({ activePage, onPageChange, onLogout }: MenuBarP
             className={makeButtonClasses(activePage === "account")}
             onClick={() => onPageChange("account")}
           >
-            {/* Account icon */}
             <svg
               aria-hidden="true"
               focusable="false"
@@ -84,6 +84,25 @@ export default function MenuBar({ activePage, onPageChange, onLogout }: MenuBarP
             </svg>
             <span>Account Management</span>
           </button>
+
+          {/* Create Account */}
+          <button
+            type="button"
+            aria-pressed={activePage === "createAccount"}
+            className={makeButtonClasses(activePage === "createAccount")}
+            onClick={() => onPageChange("createAccount")}
+          >
+            <svg
+              aria-hidden="true"
+              focusable="false"
+              className="w-3 h-3 mt-0.5"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path d="M10 4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v6h6a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-6v6a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-6H4a1 1 0 0 1-1-1v-2a1 1 0 0 1 1-1h6V4z" />
+            </svg>
+            <span>Create Account</span>
+          </button>
         </div>
 
         {/* Right: logout button */}
@@ -94,7 +113,6 @@ export default function MenuBar({ activePage, onPageChange, onLogout }: MenuBarP
             className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors border border-transparent text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
             title="Sign out"
           >
-            {/* Logout icon */}
             <svg
               aria-hidden="true"
               focusable="false"
