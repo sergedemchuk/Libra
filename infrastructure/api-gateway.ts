@@ -18,6 +18,7 @@ import { Function } from 'aws-cdk-lib/aws-lambda';
 interface LibraryCatalogApiProps {
   uploadFunction: Function;
   statusFunction: Function;
+  accountsFunction: Function;
 }
 
 export class LibraryCatalogApi extends Construct {
@@ -69,6 +70,7 @@ export class LibraryCatalogApi extends Construct {
     // Create API resources and methods
     this.createUploadEndpoint(props.uploadFunction, uploadValidator, corsOptions);
     this.createStatusEndpoint(props.statusFunction, pathValidator, corsOptions);
+    this.createAccountsEndpoints(props.accountsFunction, corsOptions);
 
     this.apiUrl = this.api.url;
 
@@ -260,5 +262,22 @@ export class LibraryCatalogApi extends Construct {
       validateRequestBody: false,
       validateRequestParameters: true
     });
+  }
+
+  private createAccountsEndpoints(accountsFunction: Function, cors: CorsOptions) {
+    const integration = new LambdaIntegration(accountsFunction, { proxy: true });
+
+    // /accounts
+    const accounts = this.api.root.addResource('accounts');
+    accounts.addMethod('GET', integration);
+    accounts.addMethod('POST', integration);
+
+    // /accounts/login
+    const login = accounts.addResource('login');
+    login.addMethod('POST', integration);
+
+    // /accounts/{userId}
+    const userIdResource = accounts.addResource('{userId}');
+    userIdResource.addMethod('DELETE', integration);
   }
 }

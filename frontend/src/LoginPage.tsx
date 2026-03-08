@@ -1,4 +1,6 @@
 import { useState, FormEvent } from "react";
+// TODO: Uncomment once the backend is deployed and the DynamoDB admin account has been created.
+// import { loginAccount } from "./api/client";
 
 interface LoginPageProps {
   onLoginSuccess: () => void;
@@ -16,14 +18,14 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
     setError("");
     setIsLoading(true);
 
-    // TODO: Replace with actual authentication logic
-    // This is a placeholder that simulates an API call
+    // TODO: Replace this placeholder with the real API call once the backend is deployed.
+    // Swap the block below for:
+    //   await loginAccount(email, password);
+    //   if (rememberMe) localStorage.setItem("libra_remember", "true");
+    //   onLoginSuccess();
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      
-      // Simulate authentication check
+      await new Promise((resolve) => setTimeout(resolve, 500));
       if (email && password) {
-        // Store auth token or session info if rememberMe is checked
         if (rememberMe) {
           localStorage.setItem("libra_remember", "true");
         }

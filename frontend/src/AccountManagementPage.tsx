@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, FormEvent } from "react";
 import AccountInfo from "./ListAccountInfo.tsx";
+import { Account, listAccounts, createAccount } from "./api/client";
 
 interface AccountManagementPageProps {
   onBack: () => void;
@@ -7,9 +8,43 @@ interface AccountManagementPageProps {
 
 export default function AccountManagementPage({ onBack }: AccountManagementPageProps) {
   const [emailOnCreate, setEmailOnCreate] = useState<boolean>(false);
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
-  const handleCreateAccount = () => {
-    return;
+  // Create-account form state
+  const [showForm, setShowForm] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState("");
+
+  useEffect(() => {
+    listAccounts()
+      .then(setAccounts)
+      .catch((err) => setLoadError(err instanceof Error ? err.message : "Failed to load accounts"))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleDeleted = (userId: string) => {
+    setAccounts((prev) => prev.filter((a) => a.userId !== userId));
+  };
+
+  const handleCreateAccount = async (e: FormEvent) => {
+    e.preventDefault();
+    setCreateError("");
+    setCreating(true);
+    try {
+      const account = await createAccount(newEmail, newPassword);
+      setAccounts((prev) => [...prev, account]);
+      setNewEmail("");
+      setNewPassword("");
+      setShowForm(false);
+    } catch (err) {
+      setCreateError(err instanceof Error ? err.message : "Failed to create account");
+    } finally {
+      setCreating(false);
+    }
   };
 
   return (
@@ -50,26 +85,74 @@ export default function AccountManagementPage({ onBack }: AccountManagementPageP
               Add a new user account to the system
             </p>
 
-            {/* Button */}
-            <button
-              type="button"
-              onClick={handleCreateAccount}
-              className="mt-5 inline-flex items-center gap-2 rounded-md border border-[color:var(--foreground)] bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 hover:shadow-sm"
-            >
-              <svg
-                className="h-4 w-4"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+            {/* Button / Form */}
+            {!showForm ? (
+              <button
+                type="button"
+                onClick={() => setShowForm(true)}
+                className="mt-5 inline-flex items-center gap-2 rounded-md border border-[color:var(--foreground)] bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 hover:shadow-sm"
               >
-                <path d="M12 5v14" />
-                <path d="M5 12h14" />
-              </svg>
-              Create Account
-            </button>
+                <svg
+                  className="h-4 w-4"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M12 5v14" />
+                  <path d="M5 12h14" />
+                </svg>
+                Create Account
+              </button>
+            ) : (
+              <form onSubmit={handleCreateAccount} className="mt-5 space-y-4 max-w-sm">
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1">Email</label>
+                  <input
+                    type="email"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                    required
+                    disabled={creating}
+                    className="w-full px-4 py-2 rounded-lg border border-primary/20 bg-input-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    placeholder="user@example.com"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1">Password</label>
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                    minLength={8}
+                    disabled={creating}
+                    className="w-full px-4 py-2 rounded-lg border border-primary/20 bg-input-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    placeholder="Min. 8 characters"
+                  />
+                </div>
+                {createError && <p className="text-sm text-destructive">{createError}</p>}
+                <div className="flex gap-3">
+                  <button
+                    type="submit"
+                    disabled={creating}
+                    className="rounded-md bg-primary px-5 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                  >
+                    {creating ? "Saving..." : "Save Account"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setShowForm(false); setCreateError(""); }}
+                    disabled={creating}
+                    className="rounded-md border border-border px-5 py-2 text-sm font-medium hover:bg-muted"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       </div>
@@ -193,7 +276,15 @@ export default function AccountManagementPage({ onBack }: AccountManagementPageP
             </div>
 
             <div>
-              <AccountInfo />
+              {loading ? (
+                <p className="text-center p-6 text-muted-foreground">Loading accounts...</p>
+              ) : loadError ? (
+                <p className="text-center p-6 text-destructive">{loadError}</p>
+              ) : accounts.length === 0 ? (
+                <p className="text-center p-6 text-muted-foreground">No accounts yet.</p>
+              ) : (
+                <AccountInfo accounts={accounts} onDeleted={handleDeleted} />
+              )}
             </div>
 
             {/* necessary do not remove */}

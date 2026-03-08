@@ -6,6 +6,7 @@ export class LibraryCatalogTables extends Construct {
   public readonly priceCache: Table;
   public readonly jobStatus: Table;
   public readonly dailyUsage: Table;
+  public readonly userAccounts: Table;
 
   constructor(scope: Construct, id: string) {
     super(scope, id);
@@ -56,6 +57,26 @@ export class LibraryCatalogTables extends Construct {
       billingMode: BillingMode.PAY_PER_REQUEST,
       timeToLiveAttribute: 'ttl', // Auto-expire old usage records
       removalPolicy: RemovalPolicy.RETAIN,
+    });
+
+    // User Accounts Table - stores application user credentials
+    this.userAccounts = new Table(this, 'UserAccounts', {
+      tableName: 'library-catalog-user-accounts',
+      partitionKey: {
+        name: 'userId',
+        type: AttributeType.STRING,
+      },
+      billingMode: BillingMode.PAY_PER_REQUEST,
+      removalPolicy: RemovalPolicy.RETAIN,
+    });
+
+    // GSI to look up a user by email (for login)
+    this.userAccounts.addGlobalSecondaryIndex({
+      indexName: 'email-index',
+      partitionKey: {
+        name: 'email',
+        type: AttributeType.STRING,
+      },
     });
   }
 }

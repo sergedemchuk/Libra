@@ -7,6 +7,7 @@ import { LibraryCatalogTables } from './dynamodb-tables';
 import { S3Buckets } from './s3-buckets';
 import { ProcessingLambda } from './processing-lambda-construct';
 import { FileHandlingLambdas } from './file-handling-lambdas';
+import { UserLambdas } from './user-lambdas';
 import { LibraryCatalogApi } from './api-gateway';
 
 class LibraryCatalogStack extends Stack {
@@ -26,6 +27,11 @@ class LibraryCatalogStack extends Stack {
       outputBucket: buckets.outputBucket,
     });
 
+    // Create user account Lambda functions
+    const userLambdas = new UserLambdas(this, 'UserLambdas', {
+      userAccountsTable: tables.userAccounts,
+    });
+
     // Get ISBNdb API secret (must be created manually first)
     const isbndbSecret = Secret.fromSecretNameV2(this, 'IsbndbSecret', 'isbndb-api-key');
     
@@ -43,6 +49,7 @@ class LibraryCatalogStack extends Stack {
     const api = new LibraryCatalogApi(this, 'Api', {
       uploadFunction: fileHandling.uploadFunction,
       statusFunction: fileHandling.statusFunction,
+      accountsFunction: userLambdas.accountsFunction,
     });
     
     // Database outputs
@@ -86,6 +93,16 @@ class LibraryCatalogStack extends Stack {
     new CfnOutput(this, 'ProcessingFunctionName', {
       value: processing.function.functionName,
       description: 'Processing Lambda function name',
+    });
+
+    new CfnOutput(this, 'AccountsFunctionName', {
+      value: userLambdas.accountsFunction.functionName,
+      description: 'Accounts Lambda function name',
+    });
+
+    new CfnOutput(this, 'UserAccountsTableName', {
+      value: tables.userAccounts.tableName,
+      description: 'User accounts DynamoDB table name',
     });
 
     // Environment configuration for frontend

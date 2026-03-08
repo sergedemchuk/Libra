@@ -120,3 +120,56 @@ export async function getJobStatus(jobId: string): Promise<JobStatusResponse> {
 
   return res.json();
 }
+
+// ─── Account API ──────────────────────────────────────────────────────────────
+
+export interface Account {
+  userId: string;
+  email: string;
+  dateCreated: string;
+  lastLogin: string;
+}
+
+export async function listAccounts(): Promise<Account[]> {
+  const res = await fetch(`${API_BASE_URL}/accounts`);
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? `Failed to list accounts (${res.status})`);
+  }
+  const data = await res.json();
+  return data.accounts;
+}
+
+export async function createAccount(email: string, password: string): Promise<Account> {
+  const res = await fetch(`${API_BASE_URL}/accounts`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? `Failed to create account (${res.status})`);
+  }
+  return res.json();
+}
+
+export async function deleteAccount(userId: string): Promise<void> {
+  const res = await fetch(`${API_BASE_URL}/accounts/${userId}`, { method: "DELETE" });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? `Failed to delete account (${res.status})`);
+  }
+}
+
+export async function loginAccount(email: string, password: string): Promise<Account> {
+  const res = await fetch(`${API_BASE_URL}/accounts/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? `Login failed (${res.status})`);
+  }
+  return res.json();
+}

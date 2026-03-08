@@ -1,0 +1,24 @@
+{
+  "name": "accounts-lambda",
+  "version": "1.0.0",
+  "description": "Lambda function to manage user accounts",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "package": "npm run build && zip -r function.zip dist/ node_modules/",
+    "deploy": "aws lambda update-function-code --function-name library-catalog-accounts --zip-file fileb://function.zip"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.450.0",
+    "@aws-sdk/util-dynamodb": "^3.450.0",
+    "bcryptjs": "^2.4.3",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.0",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^20.0.0",
+    "@types/uuid": "^9.0.0",
+    "typescript": "^5.0.0"
+  }
+}
