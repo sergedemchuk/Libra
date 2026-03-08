@@ -279,5 +279,9 @@ export class LibraryCatalogApi extends Construct {
     // /accounts/{userId}
     const userIdResource = accounts.addResource('{userId}');
     userIdResource.addMethod('DELETE', integration);
+
+    // /accounts/{userId}/password
+    const passwordResource = userIdResource.addResource('password');
+    passwordResource.addMethod('PUT', integration);
   }
 }

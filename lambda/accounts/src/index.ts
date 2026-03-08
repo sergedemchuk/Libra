@@ -11,7 +11,7 @@ const CORS_HEADERS = {
   'Content-Type': 'application/json',
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'Content-Type,Authorization',
-  'Access-Control-Allow-Methods': 'GET,POST,DELETE,OPTIONS',
+  'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
 };
 
 function ok(body: object): APIGatewayProxyResult {
@@ -67,6 +67,11 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     // DELETE /accounts/{userId}
     if (method === 'DELETE' && userId) {
       return await handleDeleteAccount(userId);
+    }
+
+    // PUT /accounts/{userId}/password
+    if (method === 'PUT' && event.path.endsWith('/password') && userId) {
+      return await handleChangePassword(userId, event);
     }
 
     return badRequest('Route not found');
@@ -167,6 +172,35 @@ async function handleLogin(event: APIGatewayProxyEvent): Promise<APIGatewayProxy
     dateCreated: user.dateCreated,
     lastLogin: now,
   });
+}
+
+async function handleChangePassword(userId: string, event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
+  if (!event.body) return badRequest('Request body required');
+
+  const { newPassword } = JSON.parse(event.body);
+
+  if (!newPassword || typeof newPassword !== 'string') return badRequest('newPassword is required');
+  if (newPassword.length < 8) return badRequest('newPassword must be at least 8 characters');
+
+  // Fetch the existing account by scanning for userId
+  const result = await dynamoClient.send(new ScanCommand({
+    TableName: USER_ACCOUNTS_TABLE,
+    FilterExpression: 'userId = :uid',
+    ExpressionAttributeValues: marshall({ ':uid': userId }),
+    Limit: 1,
+  }));
+
+  if (!result.Items || result.Items.length === 0) return notFound('Account not found');
+
+  const user = unmarshall(result.Items[0]);
+  const passwordHash = await bcrypt.hash(newPassword, 10);
+
+  await dynamoClient.send(new PutItemCommand({
+    TableName: USER_ACCOUNTS_TABLE,
+    Item: marshall({ ...user, passwordHash }),
+  }));
+
+  return ok({ message: 'Password updated' });
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

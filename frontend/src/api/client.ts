@@ -161,6 +161,18 @@ export async function deleteAccount(userId: string): Promise<void> {
   }
 }
 
+export async function changePassword(userId: string, newPassword: string): Promise<void> {
+  const res = await fetch(`${API_BASE_URL}/accounts/${userId}/password`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ newPassword }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? `Failed to change password (${res.status})`);
+  }
+}
+
 export async function loginAccount(email: string, password: string): Promise<Account> {
   const res = await fetch(`${API_BASE_URL}/accounts/login`, {
     method: "POST",
