@@ -1,6 +1,7 @@
 import React, { useState, useEffect, FormEvent } from "react";
 import AccountInfo from "./ListAccountInfo.tsx";
 import { Account, listAccounts, createAccount } from "./api/client";
+import CreateAccountFields from "./AccountCreationDataFields";
 
 interface AccountManagementPageProps {
   onBack: () => void;
@@ -12,10 +13,11 @@ export default function AccountManagementPage({ onBack }: AccountManagementPageP
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
 
-  // Create-account form state
-  const [showForm, setShowForm] = useState(false);
+  // Create-account modal state
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newEmail, setNewEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState("");
 
@@ -30,16 +32,37 @@ export default function AccountManagementPage({ onBack }: AccountManagementPageP
     setAccounts((prev) => prev.filter((a) => a.userId !== userId));
   };
 
-  const handleCreateAccount = async (e: FormEvent) => {
+  const openCreateModal = () => {
+    setCreateError("");
+    setNewEmail("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setIsCreateModalOpen(true);
+  };
+
+  const closeCreateModal = () => {
+    if (creating) return;
+    setIsCreateModalOpen(false);
+    setCreateError("");
+  };
+
+   const handleCreateAccount = async (e: FormEvent) => {
     e.preventDefault();
     setCreateError("");
+
+    if (newPassword !== confirmPassword) {
+      setCreateError("Passwords do not match.");
+      return;
+    }
+
     setCreating(true);
     try {
       const account = await createAccount(newEmail, newPassword);
       setAccounts((prev) => [...prev, account]);
       setNewEmail("");
       setNewPassword("");
-      setShowForm(false);
+      setConfirmPassword("");
+      setIsCreateModalOpen(false);
     } catch (err) {
       setCreateError(err instanceof Error ? err.message : "Failed to create account");
     } finally {
@@ -85,11 +108,10 @@ export default function AccountManagementPage({ onBack }: AccountManagementPageP
               Add a new user account to the system
             </p>
 
-            {/* Button / Form */}
-            {!showForm ? (
+            {/* Button / Modal */}
               <button
                 type="button"
-                onClick={() => setShowForm(true)}
+                onClick={openCreateModal}
                 className="mt-5 inline-flex items-center gap-2 rounded-md border border-[color:var(--foreground)] bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 hover:shadow-sm"
               >
                 <svg
@@ -106,53 +128,6 @@ export default function AccountManagementPage({ onBack }: AccountManagementPageP
                 </svg>
                 Create Account
               </button>
-            ) : (
-              <form onSubmit={handleCreateAccount} className="mt-5 space-y-4 max-w-sm">
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-1">Email</label>
-                  <input
-                    type="email"
-                    value={newEmail}
-                    onChange={(e) => setNewEmail(e.target.value)}
-                    required
-                    disabled={creating}
-                    className="w-full px-4 py-2 rounded-lg border border-primary/20 bg-input-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="user@example.com"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-1">Password</label>
-                  <input
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    required
-                    minLength={8}
-                    disabled={creating}
-                    className="w-full px-4 py-2 rounded-lg border border-primary/20 bg-input-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="Min. 8 characters"
-                  />
-                </div>
-                {createError && <p className="text-sm text-destructive">{createError}</p>}
-                <div className="flex gap-3">
-                  <button
-                    type="submit"
-                    disabled={creating}
-                    className="rounded-md bg-primary px-5 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-                  >
-                    {creating ? "Saving..." : "Save Account"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setShowForm(false); setCreateError(""); }}
-                    disabled={creating}
-                    className="rounded-md border border-border px-5 py-2 text-sm font-medium hover:bg-muted"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            )}
           </div>
         </div>
       </div>
@@ -293,6 +268,63 @@ export default function AccountManagementPage({ onBack }: AccountManagementPageP
           </div>
         </div>
       </div>
+      {isCreateModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center" role="dialog" aria-modal="true">
+          {/* Backdrop */}
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/40"
+            aria-label="Close modal"
+            onClick={closeCreateModal}
+            disabled={creating}
+          />
+
+          {/* Modal panel */}
+          <div className="relative z-10 w-full max-w-lg rounded-2xl border border-border bg-white p-6 shadow-xl">
+            <div className="flex items-start justify-between">
+              <h2 className="text-xl font-semibold text-foreground">Create Account</h2>
+              <button
+                type="button"
+                onClick={closeCreateModal}
+                disabled={creating}
+                className="rounded-md px-2 py-1 text-sm hover:bg-muted disabled:opacity-50"
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateAccount} className="mt-4">
+              <CreateAccountFields
+                SetEmailString={setNewEmail}
+                SetPasswordString={setNewPassword}
+                SetPasswordConfirmString={setConfirmPassword}
+              />
+
+              {createError && <p className="mt-2 text-sm text-destructive">{createError}</p>}
+
+              <div className="mt-5 flex gap-3 justify-end">
+                <button
+                  type="button"
+                  onClick={closeCreateModal}
+                  disabled={creating}
+                  className="rounded-md border border-border px-4 py-2 text-sm font-medium hover:bg-muted disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={creating}
+                  className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                >
+                  {creating ? "Saving..." : "Save Account"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
