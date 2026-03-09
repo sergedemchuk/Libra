@@ -1,8 +1,16 @@
+import {useState} from "react";
+import CreateAccountFields from "./AccountCreationDataFields.tsx";
+
 interface CreateAccountProps {
   onBack: () => void;
 }
 
 export default function CreateAccount({ onBack }: CreateAccountProps) {
+
+  const[NewAccountEmail, SetNewAccountEmail] = useState("");
+  const[NewAccountPassword, SetNewAccountPassword] = useState("");
+  const[NewPasswordConfirm, SetNewPasswordConfirm] = useState("");
+
   return (
     <div className="min-h-screen bg-brand-gradient flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-md">
@@ -59,6 +67,18 @@ export default function CreateAccount({ onBack }: CreateAccountProps) {
               </p>
             </div>
           </div>
+
+
+          {/* Account email and password Section */}
+          {/* Get the string of user input with these parameters*/}
+            <div>
+              <CreateAccountFields 
+              SetEmailString={SetNewAccountEmail}
+              SetPasswordString={SetNewAccountPassword}
+              SetPasswordConfirmString={SetNewPasswordConfirm}
+              />
+            </div>
+
 
           <button
             type="button"
