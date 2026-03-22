@@ -1,5 +1,6 @@
 import {useState} from "react";
 import CreateAccountFields from "./AccountCreationDataFields.tsx";
+import CreateAccountMainPage from "./MainPageAccountCreation.tsx";
 
 interface CreateAccountProps {
   onBack: () => void;
@@ -80,12 +81,18 @@ export default function CreateAccount({ onBack }: CreateAccountProps) {
             </div>
 
 
-          <button
-            type="button"
-            className="w-full px-4 py-2.5 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all"
+          <div
+            className="relative absolute lef-20 text-center w-full px-4 py-2.5 center-item rounded-lg bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all"
           >
-            Create Account
-          </button>
+
+          <CreateAccountMainPage 
+            EmailString = {NewAccountEmail}
+            PasswordString = {NewAccountPassword}
+            PasswordConfirmString = {NewPasswordConfirm}
+          />
+
+          </div>
+          
         </div>
 
         {/* Footer */}
