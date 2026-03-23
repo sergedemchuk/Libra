@@ -10,6 +10,7 @@ import LoginPage from "./LoginPage";
 import AccountManagementPage from "./AccountManagementPage";
 import { useFileUpload } from "./hooks/useFileUpload";
 import CreateAccount from "./CreateAccount";
+import ProcessedDataViewer from "./ProcessedDataViewer";
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -37,10 +38,6 @@ export default function App() {
     resetUpload();
   };
 
-  if (!isAuthenticated) {
-    return <LoginPage onLoginSuccess={handleLoginSuccess} />;
-  }
-
   const handleFileSelected = (file: File | null) => {
     setSelectedFile(file);
     if (file) resetUpload();
@@ -64,9 +61,18 @@ export default function App() {
     startUpload(selectedFile, settings);
   };
 
+  // ── Early returns AFTER all hooks ─────────────────────────────────────────
+
+  if (!isAuthenticated) {
+    return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+  }
+
   if (activePage === "createAccount") {
-  return <CreateAccount onBack={() => setActivePage("upload")} />;
-  } 
+    return <CreateAccount onBack={() => setActivePage("upload")} />;
+  }
+
+  const isDone =
+    uploadState.phase === "done" && !!uploadState.jobStatus?.downloadUrl;
 
   return (
     <div className="min-h-screen bg-brand-gradient">
@@ -76,7 +82,7 @@ export default function App() {
         onLogout={handleLogout}
       />
 
-      <div className="mx-auto max-w-4xl px-5 py-10 md:py-12 space-y-8">
+      <div className="mx-auto max-w-5xl px-5 py-10 md:py-12 space-y-8">
         {activePage === "upload" && (
           <>
             <header className="mb-6">
@@ -97,7 +103,7 @@ export default function App() {
               onReset={resetUpload}
             />
 
-            {uploadState.phase === "idle" || uploadState.phase === "error" ? (
+            {(uploadState.phase === "idle" || uploadState.phase === "error") && (
               <div className="space-y-6">
                 <ParameterTitleAndDescription
                   Description="Configure pricing adjustments and processing options"
@@ -120,9 +126,17 @@ export default function App() {
                   step={0.01}
                 />
               </div>
-            ) : null}
+            )}
 
             <DownloadExportCard uploadState={uploadState} />
+
+            {/* ── Processed Data Table ──────────────────────────────────── */}
+            {isDone && uploadState.jobStatus?.downloadUrl && (
+              <ProcessedDataViewer
+                downloadUrl={uploadState.jobStatus.downloadUrl}
+                fileName={uploadState.jobStatus.fileName ?? "processed.csv"}
+              />
+            )}
 
             {selectedFile && uploadState.phase === "idle" && (
               <section className="rounded-xl border border-primary/20 bg-card/40 p-6 md:p-8">
