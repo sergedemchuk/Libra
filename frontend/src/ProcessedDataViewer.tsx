@@ -1,11 +1,89 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { parseCsv, ParsedCsv } from "./utils/csvParser";
+import { parseCsv, stringifyCsv, ParsedCsv } from "./utils/csvParser";
 
 interface ProcessedDataViewerProps {
   /** Presigned S3 URL for the processed CSV */
   downloadUrl: string;
   /** Original file name */
   fileName: string;
+}
+
+// ── Editable cell ───────────────────────────────────────────────────────────
+function EditableCell({
+  value,
+  onChange,
+  highlight,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  highlight?: string;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+
+  useEffect(() => {
+    setDraft(value);
+  }, [value]);
+
+  if (editing) {
+    return (
+      <input
+        autoFocus
+        type="text"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={() => {
+          setEditing(false);
+          if (draft !== value) onChange(draft);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            setEditing(false);
+            if (draft !== value) onChange(draft);
+          }
+          if (e.key === "Escape") {
+            setDraft(value);
+            setEditing(false);
+          }
+        }}
+        className="w-full px-2 py-1 text-sm bg-white border border-primary rounded
+                   focus:outline-none focus:ring-2 focus:ring-primary/40
+                   text-foreground font-mono"
+      />
+    );
+  }
+
+  // Highlight matching text
+  const renderValue = () => {
+    if (!value) return <span className="text-muted-foreground italic">empty</span>;
+    if (!highlight) return value;
+
+    const lower = value.toLowerCase();
+    const hLower = highlight.toLowerCase();
+    const idx = lower.indexOf(hLower);
+    if (idx === -1) return value;
+
+    return (
+      <>
+        {value.slice(0, idx)}
+        <mark className="bg-yellow-200/80 text-foreground rounded-sm px-0.5">
+          {value.slice(idx, idx + highlight.length)}
+        </mark>
+        {value.slice(idx + highlight.length)}
+      </>
+    );
+  };
+
+  return (
+    <span
+      onClick={() => setEditing(true)}
+      title="Click to edit"
+      className="block w-full px-2 py-1 text-sm text-foreground cursor-text
+                 rounded hover:bg-primary/5 transition-colors font-mono truncate"
+    >
+      {renderValue()}
+    </span>
+  );
 }
 
 // ── Column filter dropdown ──────────────────────────────────────────────────
@@ -39,28 +117,7 @@ function ColumnFilter({
   );
 }
 
-// ── Highlight matching text in a cell ───────────────────────────────────────
-function HighlightedCell({ value, highlight }: { value: string; highlight: string }) {
-  if (!value) return <span className="text-muted-foreground italic">empty</span>;
-  if (!highlight) return <>{value}</>;
-
-  const lower = value.toLowerCase();
-  const hLower = highlight.toLowerCase();
-  const idx = lower.indexOf(hLower);
-  if (idx === -1) return <>{value}</>;
-
-  return (
-    <>
-      {value.slice(0, idx)}
-      <mark className="bg-yellow-200/80 text-foreground rounded-sm px-0.5">
-        {value.slice(idx, idx + highlight.length)}
-      </mark>
-      {value.slice(idx + highlight.length)}
-    </>
-  );
-}
-
-// ── Helper: parse CSV text ──────────────────────────────────────────────────
+// ── Helper: load CSV text into parsed state ─────────────────────────────────
 function tryParseCsvText(text: string): ParsedCsv | string {
   const result = parseCsv(text);
   if (result.headers.length === 0) return "Processed file appears empty.";
@@ -79,6 +136,7 @@ export default function ProcessedDataViewer({
   // Search & filter state
   const [searchQuery, setSearchQuery] = useState("");
   const [columnFilters, setColumnFilters] = useState<Record<string, string | null>>({});
+  const [editCount, setEditCount] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -104,7 +162,10 @@ export default function ProcessedDataViewer({
         }
       })
       .catch(() => {
-        if (!cancelled) setFetchError("CORS");
+        // Most likely CORS — show the manual-load fallback
+        if (!cancelled) {
+          setFetchError("CORS");
+        }
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -139,7 +200,7 @@ export default function ProcessedDataViewer({
     []
   );
 
-  // Unique values per column (for filter dropdowns — categorical columns only)
+  // Unique values per column (for dropdowns) — only filterable columns
   const filterableColumns = useMemo(() => {
     if (!parsed) return [] as string[];
     return parsed.headers.filter((h) => {
@@ -158,27 +219,35 @@ export default function ProcessedDataViewer({
     return map;
   }, [parsed, filterableColumns]);
 
-  // Apply search + column filters
-  const filteredWithIndex = useMemo(() => {
-    if (!parsed) return [];
-    const q = searchQuery.toLowerCase().trim();
-    const result: { row: Record<string, string>; originalIdx: number }[] = [];
+  // Cell edit
+  const handleCellChange = useCallback(
+    (globalRowIdx: number, header: string, newValue: string) => {
+      setParsed((prev) => {
+        if (!prev) return prev;
+        const updated = { ...prev, rows: [...prev.rows] };
+        updated.rows[globalRowIdx] = {
+          ...updated.rows[globalRowIdx],
+          [header]: newValue,
+        };
+        return updated;
+      });
+      setEditCount((c) => c + 1);
+    },
+    []
+  );
 
-    parsed.rows.forEach((row, originalIdx) => {
-      for (const [col, val] of Object.entries(columnFilters)) {
-        if (val !== null && (row[col] ?? "") !== val) return;
-      }
-      if (q) {
-        const match = parsed.headers.some((h) =>
-          (row[h] ?? "").toLowerCase().includes(q)
-        );
-        if (!match) return;
-      }
-      result.push({ row, originalIdx });
-    });
-
-    return result;
-  }, [parsed, searchQuery, columnFilters]);
+  // Download edited version
+  const handleDownloadEdited = useCallback(() => {
+    if (!parsed) return;
+    const csvString = stringifyCsv(parsed.headers, parsed.rows);
+    const blob = new Blob([csvString], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = fileName.replace(/\.csv$/i, "") + "-edited.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [parsed, fileName]);
 
   const clearAllFilters = useCallback(() => {
     setSearchQuery("");
@@ -209,10 +278,11 @@ export default function ProcessedDataViewer({
           View Processed Results
         </h2>
         <p className="text-sm text-muted-foreground mb-5">
-          To view your processed data, download the CSV using the button above,
-          then load it here:
+          To preview, search, filter, and edit your processed data, download the
+          CSV using the button above, then load it here:
         </p>
 
+        {/* Hidden file input */}
         <input
           ref={fileInputRef}
           type="file"
@@ -229,7 +299,16 @@ export default function ProcessedDataViewer({
                      text-primary hover:bg-primary/5 hover:border-primary/50
                      focus:outline-none focus:ring-2 focus:ring-primary transition-all"
         >
-          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+          {/* Upload icon */}
+          <svg
+            className="w-5 h-5"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
             <polyline points="17 8 12 3 7 8" />
             <line x1="12" y1="3" x2="12" y2="15" />
@@ -248,17 +327,69 @@ export default function ProcessedDataViewer({
 
   if (!parsed) return null;
 
+  // Build a map from filtered row → original index for editing
+  const filteredWithIndex = (() => {
+    const q = searchQuery.toLowerCase().trim();
+    const result: { row: Record<string, string>; originalIdx: number }[] = [];
+
+    parsed.rows.forEach((row, originalIdx) => {
+      for (const [col, val] of Object.entries(columnFilters)) {
+        if (val !== null && (row[col] ?? "") !== val) return;
+      }
+      if (q) {
+        const match = parsed.headers.some((h) =>
+          (row[h] ?? "").toLowerCase().includes(q)
+        );
+        if (!match) return;
+      }
+      result.push({ row, originalIdx });
+    });
+
+    return result;
+  })();
+
   return (
     <section className="rounded-xl border border-primary/20 bg-card/40 p-6 md:p-8">
       {/* Header */}
       <div className="mb-4 flex flex-col gap-3">
-        <div>
-          <h2 className="text-lg font-semibold text-foreground">
-            Processed Results
-          </h2>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            {parsed.rows.length} total rows · Showing {filteredWithIndex.length}
-          </p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold text-foreground">
+              Processed Results
+            </h2>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              {parsed.rows.length} total rows · Showing {filteredWithIndex.length}
+              {editCount > 0 && (
+                <span className="ml-2 text-primary font-medium">
+                  ({editCount} edit{editCount > 1 ? "s" : ""})
+                </span>
+              )}
+            </p>
+          </div>
+
+          {editCount > 0 && (
+            <button
+              type="button"
+              onClick={handleDownloadEdited}
+              className="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary
+                         text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-all"
+            >
+              <svg
+                className="w-4 h-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              Download Edited CSV
+            </button>
+          )}
         </div>
 
         {/* Search bar + filter toggle */}
@@ -308,7 +439,15 @@ export default function ProcessedDataViewer({
                 : "border-primary/20 text-muted-foreground hover:text-foreground hover:border-primary/40",
             ].join(" ")}
           >
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              className="w-4 h-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
             </svg>
             Filters
@@ -352,6 +491,16 @@ export default function ProcessedDataViewer({
         )}
       </div>
 
+      {/* Info tip */}
+      <div className="mb-4 rounded-lg bg-primary/5 border border-primary/10 px-4 py-2.5">
+        <p className="text-xs text-muted-foreground">
+          <span className="font-semibold text-foreground">Tip:</span> Click any
+          cell to edit it in-place. Use the search bar and column filters to find
+          specific entries. Edits are reflected in the "Download Edited CSV"
+          export.
+        </p>
+      </div>
+
       {/* Table */}
       <div className="overflow-x-auto rounded-lg border border-primary/10">
         {filteredWithIndex.length === 0 ? (
@@ -383,16 +532,14 @@ export default function ProcessedDataViewer({
                   key={originalIdx}
                   className={displayIdx % 2 === 0 ? "bg-card/30" : "bg-card/60"}
                 >
-                  <td className="px-3 py-1.5 text-xs text-muted-foreground text-center tabular-nums">
+                  <td className="px-3 py-1 text-xs text-muted-foreground text-center tabular-nums">
                     {originalIdx + 1}
                   </td>
                   {parsed.headers.map((h) => (
-                    <td
-                      key={h}
-                      className="px-3 py-1.5 text-sm text-foreground font-mono truncate max-w-[200px]"
-                    >
-                      <HighlightedCell
+                    <td key={h} className="px-1 py-0.5">
+                      <EditableCell
                         value={row[h] ?? ""}
+                        onChange={(v) => handleCellChange(originalIdx, h, v)}
                         highlight={searchQuery}
                       />
                     </td>
@@ -405,8 +552,15 @@ export default function ProcessedDataViewer({
       </div>
 
       {/* Footer stats */}
-      <div className="mt-3 text-xs text-muted-foreground">
-        Showing {filteredWithIndex.length} of {parsed.rows.length} rows
+      <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
+        <span>
+          Showing {filteredWithIndex.length} of {parsed.rows.length} rows
+        </span>
+        {editCount > 0 && (
+          <span className="text-primary font-medium">
+            {editCount} cell{editCount > 1 ? "s" : ""} edited — download to save
+          </span>
+        )}
       </div>
     </section>
   );
