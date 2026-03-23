@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { parseCsv, ParsedCsv } from "./utils/csvParser";
 
 interface ProcessedDataViewerProps {
@@ -6,6 +6,58 @@ interface ProcessedDataViewerProps {
   downloadUrl: string;
   /** Original file name */
   fileName: string;
+}
+
+// ── Column filter dropdown ──────────────────────────────────────────────────
+function ColumnFilter({
+  header,
+  uniqueValues,
+  selected,
+  onChange,
+}: {
+  header: string;
+  uniqueValues: string[];
+  selected: string | null;
+  onChange: (val: string | null) => void;
+}) {
+  return (
+    <select
+      value={selected ?? "__all__"}
+      onChange={(e) => onChange(e.target.value === "__all__" ? null : e.target.value)}
+      className="w-full mt-1 px-1.5 py-1 text-xs bg-card border border-primary/20 rounded
+                 text-foreground focus:outline-none focus:ring-1 focus:ring-primary/40
+                 truncate"
+      title={`Filter by ${header}`}
+    >
+      <option value="__all__">All</option>
+      {uniqueValues.map((v) => (
+        <option key={v} value={v}>
+          {v || "(empty)"}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+// ── Highlight matching text in a cell ───────────────────────────────────────
+function HighlightedCell({ value, highlight }: { value: string; highlight: string }) {
+  if (!value) return <span className="text-muted-foreground italic">empty</span>;
+  if (!highlight) return <>{value}</>;
+
+  const lower = value.toLowerCase();
+  const hLower = highlight.toLowerCase();
+  const idx = lower.indexOf(hLower);
+  if (idx === -1) return <>{value}</>;
+
+  return (
+    <>
+      {value.slice(0, idx)}
+      <mark className="bg-yellow-200/80 text-foreground rounded-sm px-0.5">
+        {value.slice(idx, idx + highlight.length)}
+      </mark>
+      {value.slice(idx + highlight.length)}
+    </>
+  );
 }
 
 // ── Helper: parse CSV text ──────────────────────────────────────────────────
@@ -23,6 +75,11 @@ export default function ProcessedDataViewer({
   const [parsed, setParsed] = useState<ParsedCsv | null>(null);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
+
+  // Search & filter state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [columnFilters, setColumnFilters] = useState<Record<string, string | null>>({});
+  const [showFilters, setShowFilters] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -81,6 +138,56 @@ export default function ProcessedDataViewer({
     },
     []
   );
+
+  // Unique values per column (for filter dropdowns — categorical columns only)
+  const filterableColumns = useMemo(() => {
+    if (!parsed) return [] as string[];
+    return parsed.headers.filter((h) => {
+      const uniq = new Set(parsed.rows.map((r) => r[h] ?? ""));
+      return uniq.size <= 50 && uniq.size > 1;
+    });
+  }, [parsed]);
+
+  const uniqueValuesMap = useMemo(() => {
+    if (!parsed) return {} as Record<string, string[]>;
+    const map: Record<string, string[]> = {};
+    for (const h of filterableColumns) {
+      const vals = [...new Set(parsed.rows.map((r) => r[h] ?? ""))].sort();
+      map[h] = vals;
+    }
+    return map;
+  }, [parsed, filterableColumns]);
+
+  // Apply search + column filters
+  const filteredWithIndex = useMemo(() => {
+    if (!parsed) return [];
+    const q = searchQuery.toLowerCase().trim();
+    const result: { row: Record<string, string>; originalIdx: number }[] = [];
+
+    parsed.rows.forEach((row, originalIdx) => {
+      for (const [col, val] of Object.entries(columnFilters)) {
+        if (val !== null && (row[col] ?? "") !== val) return;
+      }
+      if (q) {
+        const match = parsed.headers.some((h) =>
+          (row[h] ?? "").toLowerCase().includes(q)
+        );
+        if (!match) return;
+      }
+      result.push({ row, originalIdx });
+    });
+
+    return result;
+  }, [parsed, searchQuery, columnFilters]);
+
+  const clearAllFilters = useCallback(() => {
+    setSearchQuery("");
+    setColumnFilters({});
+  }, []);
+
+  const activeFilterCount =
+    Object.values(columnFilters).filter((v) => v !== null).length +
+    (searchQuery ? 1 : 0);
 
   // ── Loading state ─────────────────────────────────────────────────────────
   if (loading) {
@@ -144,61 +251,162 @@ export default function ProcessedDataViewer({
   return (
     <section className="rounded-xl border border-primary/20 bg-card/40 p-6 md:p-8">
       {/* Header */}
-      <div className="mb-4">
-        <h2 className="text-lg font-semibold text-foreground">
-          Processed Results
-        </h2>
-        <p className="text-sm text-muted-foreground mt-0.5">
-          {parsed.rows.length} rows · {parsed.headers.length} columns
-        </p>
+      <div className="mb-4 flex flex-col gap-3">
+        <div>
+          <h2 className="text-lg font-semibold text-foreground">
+            Processed Results
+          </h2>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {parsed.rows.length} total rows · Showing {filteredWithIndex.length}
+          </p>
+        </div>
+
+        {/* Search bar + filter toggle */}
+        <div className="flex flex-col sm:flex-row gap-2">
+          <div className="relative flex-1">
+            <svg
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search across all columns…"
+              className="w-full pl-9 pr-4 py-2.5 text-sm rounded-lg border border-primary/20
+                         bg-[var(--input-background)] text-foreground
+                         placeholder:text-muted-foreground
+                         focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary
+                         transition-all"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                title="Clear search"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setShowFilters((f) => !f)}
+            className={[
+              "shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border text-sm font-medium transition-all",
+              showFilters
+                ? "border-primary bg-primary/10 text-primary"
+                : "border-primary/20 text-muted-foreground hover:text-foreground hover:border-primary/40",
+            ].join(" ")}
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+            </svg>
+            Filters
+            {activeFilterCount > 0 && (
+              <span className="ml-1 px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground text-xs font-bold">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
+
+          {activeFilterCount > 0 && (
+            <button
+              type="button"
+              onClick={clearAllFilters}
+              className="shrink-0 px-3 py-2.5 rounded-lg text-sm text-destructive hover:bg-destructive/10 transition-all"
+            >
+              Clear all
+            </button>
+          )}
+        </div>
+
+        {/* Column filter dropdowns */}
+        {showFilters && filterableColumns.length > 0 && (
+          <div className="flex flex-wrap gap-3 p-3 rounded-lg bg-primary/5 border border-primary/10">
+            {filterableColumns.map((h) => (
+              <div key={h} className="min-w-[140px] max-w-[200px]">
+                <label className="text-xs font-semibold text-foreground uppercase tracking-wide">
+                  {h}
+                </label>
+                <ColumnFilter
+                  header={h}
+                  uniqueValues={uniqueValuesMap[h] ?? []}
+                  selected={columnFilters[h] ?? null}
+                  onChange={(val) =>
+                    setColumnFilters((prev) => ({ ...prev, [h]: val }))
+                  }
+                />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Table */}
       <div className="overflow-x-auto rounded-lg border border-primary/10">
-        <table className="min-w-full text-left border-collapse">
-          <thead>
-            <tr className="bg-primary/10">
-              <th className="px-3 py-2 text-xs font-semibold text-muted-foreground w-12 text-center">
-                #
-              </th>
-              {parsed.headers.map((h) => (
-                <th
-                  key={h}
-                  className="px-3 py-2 text-xs font-semibold text-foreground uppercase tracking-wide whitespace-nowrap"
-                >
-                  {h}
+        {filteredWithIndex.length === 0 ? (
+          <div className="px-6 py-12 text-center">
+            <p className="text-sm text-muted-foreground">
+              No rows match your current search or filters.
+            </p>
+          </div>
+        ) : (
+          <table className="min-w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-primary/10">
+                <th className="px-3 py-2 text-xs font-semibold text-muted-foreground w-12 text-center">
+                  #
                 </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {parsed.rows.map((row, idx) => (
-              <tr
-                key={idx}
-                className={idx % 2 === 0 ? "bg-card/30" : "bg-card/60"}
-              >
-                <td className="px-3 py-1.5 text-xs text-muted-foreground text-center tabular-nums">
-                  {idx + 1}
-                </td>
                 {parsed.headers.map((h) => (
-                  <td
+                  <th
                     key={h}
-                    className="px-3 py-1.5 text-sm text-foreground font-mono truncate max-w-[200px]"
+                    className="px-3 py-2 text-xs font-semibold text-foreground uppercase tracking-wide whitespace-nowrap"
                   >
-                    {row[h] || (
-                      <span className="text-muted-foreground italic">empty</span>
-                    )}
-                  </td>
+                    {h}
+                  </th>
                 ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filteredWithIndex.map(({ row, originalIdx }, displayIdx) => (
+                <tr
+                  key={originalIdx}
+                  className={displayIdx % 2 === 0 ? "bg-card/30" : "bg-card/60"}
+                >
+                  <td className="px-3 py-1.5 text-xs text-muted-foreground text-center tabular-nums">
+                    {originalIdx + 1}
+                  </td>
+                  {parsed.headers.map((h) => (
+                    <td
+                      key={h}
+                      className="px-3 py-1.5 text-sm text-foreground font-mono truncate max-w-[200px]"
+                    >
+                      <HighlightedCell
+                        value={row[h] ?? ""}
+                        highlight={searchQuery}
+                      />
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
-      {/* Footer */}
+      {/* Footer stats */}
       <div className="mt-3 text-xs text-muted-foreground">
-        {parsed.rows.length} rows
+        Showing {filteredWithIndex.length} of {parsed.rows.length} rows
       </div>
     </section>
   );
