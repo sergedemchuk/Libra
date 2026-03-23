@@ -22,10 +22,10 @@ export default function CreateAccountFields({SetEmailString, SetPasswordString, 
 
 
     return (
-        //Email and address input for account creation withinaccount management NOT top right bar
+        //Email and address input for account creation within account management NOT top right bar
         <div className = "p-4 ">
 
-            {/*Email Address input*/}
+            {/* Email Address input */}
             <div className="text-primary/70 text-serif font-semibold">
 
                 <label
