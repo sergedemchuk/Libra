@@ -1,6 +1,5 @@
 import { useState, FormEvent } from "react";
-// TODO: Uncomment once the backend is deployed and the DynamoDB admin account has been created.
-// import { loginAccount } from "./api/client";
+import { loginAccount } from "./api/client";
 
 interface LoginPageProps {
   onLoginSuccess: () => void;
@@ -18,23 +17,14 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
     setError("");
     setIsLoading(true);
 
-    // TODO: Replace this placeholder with the real API call once the backend is deployed.
-    // Swap the block below for:
-    //   await loginAccount(email, password);
-    //   if (rememberMe) localStorage.setItem("libra_remember", "true");
-    //   onLoginSuccess();
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      if (email && password) {
-        if (rememberMe) {
-          localStorage.setItem("libra_remember", "true");
-        }
-        onLoginSuccess();
-      } else {
-        setError("Please enter both email and password");
+      await loginAccount(email, password);
+      if (rememberMe) {
+        localStorage.setItem("libra_remember", "true");
       }
+      onLoginSuccess();
     } catch (err) {
-      setError("An error occurred. Please try again.");
+      setError(err instanceof Error ? err.message : "Invalid email or password");
     } finally {
       setIsLoading(false);
     }
