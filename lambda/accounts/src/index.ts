@@ -1,5 +1,5 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { DynamoDBClient, PutItemCommand, ScanCommand, DeleteItemCommand, QueryCommand } from '@aws-sdk/client-dynamodb';
+import { DynamoDBClient, PutItemCommand, ScanCommand, DeleteItemCommand, QueryCommand, GetItemCommand } from '@aws-sdk/client-dynamodb';
 import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
 import * as bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
@@ -128,19 +128,16 @@ async function handleListAccounts(): Promise<APIGatewayProxyResult> {
 const PROTECTED_EMAIL = 'libradev@libra.com';
 
 async function handleDeleteAccount(userId: string): Promise<APIGatewayProxyResult> {
-  // Verify user exists first
-  const result = await dynamoClient.send(new ScanCommand({
+  const result = await dynamoClient.send(new GetItemCommand({
     TableName: USER_ACCOUNTS_TABLE,
-    FilterExpression: 'userId = :uid',
-    ExpressionAttributeValues: marshall({ ':uid': userId }),
-    Limit: 1,
+    Key: marshall({ userId }),
   }));
 
-  if (!result.Items || result.Items.length === 0) {
+  if (!result.Item) {
     return notFound('Account not found');
   }
 
-  const account = unmarshall(result.Items[0]);
+  const account = unmarshall(result.Item);
   if (account.email === PROTECTED_EMAIL) {
     return badRequest('This account cannot be deleted');
   }
@@ -189,17 +186,14 @@ async function handleChangePassword(userId: string, event: APIGatewayProxyEvent)
   if (!newPassword || typeof newPassword !== 'string') return badRequest('newPassword is required');
   if (newPassword.length < 8) return badRequest('newPassword must be at least 8 characters');
 
-  // Fetch the existing account by scanning for userId
-  const result = await dynamoClient.send(new ScanCommand({
+  const result = await dynamoClient.send(new GetItemCommand({
     TableName: USER_ACCOUNTS_TABLE,
-    FilterExpression: 'userId = :uid',
-    ExpressionAttributeValues: marshall({ ':uid': userId }),
-    Limit: 1,
+    Key: marshall({ userId }),
   }));
 
-  if (!result.Items || result.Items.length === 0) return notFound('Account not found');
+  if (!result.Item) return notFound('Account not found');
 
-  const user = unmarshall(result.Items[0]);
+  const user = unmarshall(result.Item);
   const passwordHash = await bcrypt.hash(newPassword, 10);
 
   await dynamoClient.send(new PutItemCommand({
