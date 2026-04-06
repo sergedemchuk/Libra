@@ -31,7 +31,7 @@ export class LibraryCatalogApi extends Construct {
     // CORS configuration
     const corsOptions: CorsOptions = {
       allowOrigins: ['*'], // Restrict to your domain in production
-      allowMethods: ['GET', 'POST', 'OPTIONS'],
+      allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
       allowHeaders: [
         'Content-Type',
         'Authorization',

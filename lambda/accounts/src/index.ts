@@ -125,6 +125,8 @@ async function handleListAccounts(): Promise<APIGatewayProxyResult> {
   return ok({ accounts });
 }
 
+const PROTECTED_EMAIL = 'libradev@libra.com';
+
 async function handleDeleteAccount(userId: string): Promise<APIGatewayProxyResult> {
   // Verify user exists first
   const result = await dynamoClient.send(new ScanCommand({
@@ -136,6 +138,11 @@ async function handleDeleteAccount(userId: string): Promise<APIGatewayProxyResul
 
   if (!result.Items || result.Items.length === 0) {
     return notFound('Account not found');
+  }
+
+  const account = unmarshall(result.Items[0]);
+  if (account.email === PROTECTED_EMAIL) {
+    return badRequest('This account cannot be deleted');
   }
 
   await dynamoClient.send(new DeleteItemCommand({
