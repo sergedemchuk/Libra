@@ -84,15 +84,15 @@ export class ProcessingLambda extends Construct {
     }));
 
     // Create Lambda function
-    this.function = new Function(this, 'ProcessCsvFunction', {
-      functionName: 'library-catalog-process-csv',
+    this.function = new Function(this, 'ProcessFileFunction', {
+      functionName: 'library-catalog-process-file',
       runtime: Runtime.NODEJS_20_X,
       architecture: Architecture.ARM_64,
       handler: 'dist/index.handler',  // Fixed: matches compiled output from src/index.ts -> dist/index.js
-      code: Code.fromAsset('../lambda/process-csv'),
+      code: Code.fromAsset('../lambda/process-file'),
       role: lambdaRole,
       timeout: Duration.minutes(15), // Max processing time
-      memorySize: 1024, // Adequate memory for CSV processing
+      memorySize: 1024, // Adequate memory for file processing
       environment: {
         PRICE_CACHE_TABLE: props.priceCacheTable.tableName,
         JOB_STATUS_TABLE: props.jobStatusTable.tableName,
