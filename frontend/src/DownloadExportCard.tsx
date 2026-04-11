@@ -11,7 +11,9 @@ const DownloadExportCard: React.FC<DownloadExportCardProps> = ({ uploadState }) 
     !!uploadState.jobStatus?.downloadUrl;
 
   const downloadUrl = uploadState.jobStatus?.downloadUrl;
-  const fileName = uploadState.jobStatus?.fileName ?? "processed-catalog.csv";
+  const rawName = uploadState.jobStatus?.fileName ?? "processed-catalog";
+  const baseName = rawName.replace(/\.[^./\\]+$/, "");
+  const fileName = `${baseName}.csv`;
 
   return (
     <section
