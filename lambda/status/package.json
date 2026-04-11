@@ -5,18 +5,22 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
+    "test": "jest",
     "package": "npm run build && zip -r function.zip dist/ node_modules/",
     "deploy": "aws lambda update-function-code --function-name library-catalog-status --zip-file fileb://function.zip"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.450.0",
     "@aws-sdk/client-dynamodb": "^3.450.0",
+    "@aws-sdk/client-s3": "^3.450.0",
     "@aws-sdk/s3-request-presigner": "^3.450.0",
     "@aws-sdk/util-dynamodb": "^3.450.0"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.0",
+    "@types/jest": "^30.0.0",
     "@types/node": "^20.0.0",
+    "jest": "^30.3.0",
+    "ts-jest": "^29.4.9",
     "typescript": "^5.0.0"
   }
 }
