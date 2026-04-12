@@ -14,6 +14,7 @@ import ProcessedDataViewer from "./ProcessedDataViewer";
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [userRole, setUserRole] = useState<"admin" | "user">("user");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [priceRounding, setPriceRounding] = useState<boolean>(false);
   const [priceAdjustment, setPriceAdjustment] = useState<number>(0.0);
@@ -23,14 +24,22 @@ export default function App() {
 
   useEffect(() => {
     const hasSession = localStorage.getItem("libra_remember") === "true";
+    const storedRole = localStorage.getItem("libra_role");
     setIsAuthenticated(hasSession);
+    setUserRole(storedRole === "admin" ? "admin" : "user");
   }, []);
 
-  const handleLoginSuccess = () => setIsAuthenticated(true);
+  const handleLoginSuccess = (role: "admin" | "user") => {
+    setUserRole(role);
+    setIsAuthenticated(true);
+    setActivePage("upload");
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("libra_remember");
+    localStorage.removeItem("libra_role");
     setIsAuthenticated(false);
+    setUserRole("user");
     setSelectedFile(null);
     setPriceRounding(false);
     setPriceAdjustment(0.0);
@@ -67,7 +76,13 @@ export default function App() {
     return <LoginPage onLoginSuccess={handleLoginSuccess} />;
   }
 
-  if (activePage === "createAccount") {
+  // Non-admins can only see the main upload tool.
+  const effectivePage: PageKey =
+    userRole !== "admin" && (activePage === "account" || activePage === "createAccount")
+      ? "upload"
+      : activePage;
+
+  if (userRole === "admin" && effectivePage === "createAccount") {
     return <CreateAccount onBack={() => setActivePage("upload")} />;
   }
 
@@ -77,13 +92,14 @@ export default function App() {
   return (
     <div className="min-h-screen bg-brand-gradient">
       <MenuBar
-        activePage={activePage}
+        activePage={effectivePage}
         onPageChange={setActivePage}
         onLogout={handleLogout}
+        userRole={userRole}
       />
 
       <div className="mx-auto max-w-5xl px-5 py-10 md:py-12 space-y-8">
-        {activePage === "upload" && (
+        {effectivePage === "upload" && (
           <>
             <header className="mb-6">
               <h1 className="text-2xl md:text-3xl font-semibold text-foreground">
@@ -168,7 +184,7 @@ export default function App() {
           </>
         )}
 
-        {activePage === "account" && (
+        {effectivePage === "account" && userRole === "admin" && (
           <AccountManagementPage onBack={() => setActivePage("upload")} />
         )}
       </div>

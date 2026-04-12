@@ -6,13 +6,16 @@ interface MenuBarProps {
   activePage: PageKey;
   onPageChange: (page: PageKey) => void;
   onLogout?: () => void;
+  userRole?: "admin" | "user";
 }
 
 export default function MenuBar({
   activePage,
   onPageChange,
   onLogout,
+  userRole = "user",
 }: MenuBarProps) {
+  const isAdmin = userRole === "admin";
   const makeButtonClasses = (isActive: boolean) =>
     [
       "inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors border",
@@ -61,7 +64,8 @@ export default function MenuBar({
             <span>Upload Catalog Data</span>
           </button>
 
-          {/* Account Management */}
+          {/* Account Management — admin only */}
+          {isAdmin && (
           <button
             type="button"
             aria-pressed={activePage === "account"}
@@ -84,8 +88,10 @@ export default function MenuBar({
             </svg>
             <span>Account Management</span>
           </button>
+          )}
 
-          {/* Create Account */}
+          {/* Create Account — admin only */}
+          {isAdmin && (
           <button
             type="button"
             aria-pressed={activePage === "createAccount"}
@@ -103,6 +109,7 @@ export default function MenuBar({
             </svg>
             <span>Create Account</span>
           </button>
+          )}
         </div>
 
         {/* Right: logout button */}
