@@ -126,6 +126,7 @@ export async function getJobStatus(jobId: string): Promise<JobStatusResponse> {
 export interface Account {
   userId: string;
   email: string;
+  role: "admin" | "user";
   dateCreated: string;
   lastLogin: string;
 }
@@ -140,11 +141,15 @@ export async function listAccounts(): Promise<Account[]> {
   return data.accounts;
 }
 
-export async function createAccount(email: string, password: string): Promise<Account> {
+export async function createAccount(
+  email: string,
+  password: string,
+  role: "admin" | "user" = "user",
+): Promise<Account> {
   const res = await fetch(`${API_BASE_URL}/accounts`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ email, password, role }),
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));

@@ -18,6 +18,7 @@ export default function AccountManagementPage({ onBack }: AccountManagementPageP
   const [newEmail, setNewEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [newRole, setNewRole] = useState<"admin" | "user">("user");
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState("");
 
@@ -57,11 +58,12 @@ export default function AccountManagementPage({ onBack }: AccountManagementPageP
 
     setCreating(true);
     try {
-      const account = await createAccount(newEmail, newPassword);
+      const account = await createAccount(newEmail, newPassword, newRole);
       setAccounts((prev) => [...prev, account]);
       setNewEmail("");
       setNewPassword("");
       setConfirmPassword("");
+      setNewRole("user");
       setIsCreateModalOpen(false);
     } catch (err) {
       setCreateError(err instanceof Error ? err.message : "Failed to create account");

@@ -2,7 +2,7 @@ import { useState, FormEvent } from "react";
 import { loginAccount } from "./api/client";
 
 interface LoginPageProps {
-  onLoginSuccess: () => void;
+  onLoginSuccess: (role: "admin" | "user") => void;
 }
 
 export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
@@ -18,11 +18,13 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
     setIsLoading(true);
 
     try {
-      await loginAccount(email, password);
+      const account = await loginAccount(email, password);
+      const role: "admin" | "user" = account.role === "admin" ? "admin" : "user";
       if (rememberMe) {
         localStorage.setItem("libra_remember", "true");
+        localStorage.setItem("libra_role", role);
       }
-      onLoginSuccess();
+      onLoginSuccess(role);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Invalid email or password");
     } finally {

@@ -99,33 +99,46 @@ async function handleCreateAccount(event: APIGatewayProxyEvent): Promise<APIGate
   const userId = uuidv4();
   const now = new Date().toISOString();
   const passwordHash = await bcrypt.hash(password, 10);
+  const normalizedEmail = email.toLowerCase().trim();
+
+  // Optional role from request body; defaults to "user". Protected admin email
+  // is always "admin" regardless of what the client sends.
+  const requestedRole = (JSON.parse(event.body).role ?? 'user').toString().toLowerCase();
+  const role =
+    normalizedEmail === PROTECTED_EMAIL
+      ? 'admin'
+      : requestedRole === 'admin'
+      ? 'admin'
+      : 'user';
 
   await dynamoClient.send(new PutItemCommand({
     TableName: USER_ACCOUNTS_TABLE,
     Item: marshall({
       userId,
-      email: email.toLowerCase().trim(),
+      email: normalizedEmail,
       passwordHash,
+      role,
       dateCreated: now,
       lastLogin: now,
     }),
     ConditionExpression: 'attribute_not_exists(userId)',
   }));
 
-  return created({ userId, email, dateCreated: now });
+  return created({ userId, email: normalizedEmail, role, dateCreated: now });
 }
 
 async function handleListAccounts(): Promise<APIGatewayProxyResult> {
   const result = await dynamoClient.send(new ScanCommand({
     TableName: USER_ACCOUNTS_TABLE,
-    ProjectionExpression: 'userId, email, dateCreated, lastLogin',
+    ProjectionExpression: 'userId, email, dateCreated, lastLogin, #r',
+    ExpressionAttributeNames: { '#r': 'role' },
   }));
 
   const accounts = (result.Items ?? []).map(item => unmarshall(item));
   return ok({ accounts });
 }
 
-const PROTECTED_EMAIL = 'libradev@libra.com';
+const PROTECTED_EMAIL = 'libradev.admin@gmail.com';
 
 async function handleDeleteAccount(userId: string): Promise<APIGatewayProxyResult> {
   const result = await dynamoClient.send(new GetItemCommand({
@@ -173,6 +186,7 @@ async function handleLogin(event: APIGatewayProxyEvent): Promise<APIGatewayProxy
   return ok({
     userId: user.userId,
     email: user.email,
+    role: user.role ?? (user.email === PROTECTED_EMAIL ? 'admin' : 'user'),
     dateCreated: user.dateCreated,
     lastLogin: now,
   });
