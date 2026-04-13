@@ -15,6 +15,7 @@ import ProcessedDataViewer from "./ProcessedDataViewer";
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [userRole, setUserRole] = useState<"admin" | "user">("user");
+  const [currentUserEmail, setCurrentUserEmail] = useState<string>("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [priceRounding, setPriceRounding] = useState<boolean>(false);
   const [priceAdjustment, setPriceAdjustment] = useState<number>(0.0);
@@ -25,21 +26,29 @@ export default function App() {
   useEffect(() => {
     const hasSession = localStorage.getItem("libra_remember") === "true";
     const storedRole = localStorage.getItem("libra_role");
+    const storedEmail = localStorage.getItem("libra_email");
     setIsAuthenticated(hasSession);
     setUserRole(storedRole === "admin" ? "admin" : "user");
+    setCurrentUserEmail(storedEmail ?? "");
   }, []);
 
-  const handleLoginSuccess = (role: "admin" | "user") => {
+  const handleLoginSuccess = (role: "admin" | "user", email: string) => {
     setUserRole(role);
+    setCurrentUserEmail(email);
     setIsAuthenticated(true);
     setActivePage("upload");
+    // Always store the email for the session so child components can use it.
+    // (The "remember me" flag controls only persistence of the auth flag + role.)
+    localStorage.setItem("libra_email", email);
   };
 
   const handleLogout = () => {
     localStorage.removeItem("libra_remember");
     localStorage.removeItem("libra_role");
+    localStorage.removeItem("libra_email");
     setIsAuthenticated(false);
     setUserRole("user");
+    setCurrentUserEmail("");
     setSelectedFile(null);
     setPriceRounding(false);
     setPriceAdjustment(0.0);
@@ -185,7 +194,10 @@ export default function App() {
         )}
 
         {effectivePage === "account" && userRole === "admin" && (
-          <AccountManagementPage onBack={() => setActivePage("upload")} />
+          <AccountManagementPage
+            onBack={() => setActivePage("upload")}
+            currentUserEmail={currentUserEmail}
+          />
         )}
       </div>
     </div>

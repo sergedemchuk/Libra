@@ -1,10 +1,12 @@
 import React, { useState, useEffect, FormEvent } from "react";
 import AccountInfo from "./ListAccountInfo.tsx";
 import { Account, listAccounts, createAccount } from "./api/client";
+import AdminNotificationCard from "./AdminNotificationCard";
 import CreateAccountFields from "./AccountCreationDataFields";
 
 interface AccountManagementPageProps {
   onBack: () => void;
+  currentUserEmail: string;
 }
 
 export default function AccountManagementPage({ onBack }: AccountManagementPageProps) {
@@ -208,6 +210,12 @@ export default function AccountManagementPage({ onBack }: AccountManagementPageP
           </div>
         </div>
       </div>
+
+      {/* ADMIN NOTIFICATION CARD */}
+      <AdminNotificationCard currentUserEmail={currentUserEmail} />
+
+      {/* ACCOUNT LIST SECTION */}
+      <div className="mt-6 rounded-2xl border border-border bg-card/40 p-6 md:p-8 shadow-sm"></div>
 
       {/* ACCOUNT LIST SECTION */}
       <div className="mt-6 rounded-2xl border border-border bg-card/40 p-6 md:p-8 shadow-sm">
