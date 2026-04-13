@@ -139,6 +139,21 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
                   className="w-full px-4 py-2.5 rounded-lg border border-primary/20 bg-input-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all" />
               </div>
 
+              {/* Admin Contact Link */}
+              <div className="mt-6 pt-6 border-t border-primary/10 text-center">
+                <p className="text-sm text-muted-foreground">
+                  Don't have an account?{" "}
+                  <button
+                    type="button"
+                    className="text-primary hover:text-primary/80 font-medium transition-colors"
+                    disabled={isLoading}
+                    onClick={handleCopy}
+                  >
+                    Contact your administrator
+                  </button>
+                </p>
+              </div>
+
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <input id="remember-me" type="checkbox" checked={rememberMe}
@@ -197,18 +212,8 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
               <button type="submit" disabled={isLoading || code.length !== 6}
                 className="w-full py-2.5 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
                 {isLoading ? "Verifying…" : "Verify & sign in"}
-          {/* Sign Up Link */}
-          <div className="mt-6 pt-6 border-t border-primary/10 text-center">
-            <p className="text-sm text-muted-foreground">
-              Don't have an account?{" "}
-              <button
-                type="button"
-                className="text-primary hover:text-primary/80 font-medium transition-colors"
-                disabled={isLoading}
-                onClick={handleCopy}
-              >
-                Contact your administrator
               </button>
+          
 
               <div className="flex items-center justify-between text-sm">
                 <button type="button" onClick={() => { setStep("credentials"); setCode(""); setError(""); }}
