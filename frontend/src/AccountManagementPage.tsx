@@ -166,7 +166,7 @@ export default function AccountManagementPage({ onBack, currentUserEmail }: Acco
 
         <div className="space-y-4 mt-5">
           {/* Email on Account Creation toggle */}
-          <div className="flex items-center justify-between rounded-xl border border-[#753114]/20 bg-white/30 px-5 py-4">
+          <div className="flex items-center justify-between rounded-xl border border-border/20 bg-border/30 px-5 py-4">
             <div className="flex items-center gap-3">
               {/* Mail icon */}
               <svg
@@ -197,12 +197,12 @@ export default function AccountManagementPage({ onBack, currentUserEmail }: Acco
               role="switch"
               aria-checked={emailOnCreate}
               onClick={() => setEmailOnCreate(!emailOnCreate)}
-              className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
-                emailOnCreate ? "bg-primary" : "bg-muted"
+              className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border-2 border-border transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
+                emailOnCreate ? "bg-[#f5f2e8]" : "bg-[#e8dcc0]"
               }`}
             >
               <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform duration-200 ease-in-out ${
+                className={`inline-block h-4 w-4 transform rounded-full border border-border shadow-sm transition-transform duration-200 ease-in-out ${
                   emailOnCreate ? "translate-x-5" : "translate-x-1"
                 }`}
               />
@@ -218,7 +218,7 @@ export default function AccountManagementPage({ onBack, currentUserEmail }: Acco
       <div className="mt-6 rounded-2xl border border-border bg-card/40 p-6 md:p-8 shadow-sm"></div>
 
       {/* ACCOUNT LIST SECTION */}
-      <div className="mt-6 rounded-2xl border border-border bg-card/40 p-6 md:p-8 shadow-sm">
+      <div className="mt-6 rounded-2xl border border-border bg-card p-6 md:p-8 shadow-sm">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold text-foreground">
             Account Management
@@ -234,24 +234,24 @@ export default function AccountManagementPage({ onBack, currentUserEmail }: Acco
         </div>
 
         {/* All Accounts */}
-        <div className="border border-[#753114]/20 rounded-xl bg-white/30 pt-3 mt-10 shadow-sm">
+        <div className="border border-border rounded-xl bg-background pt-3 mt-10 shadow-sm">
 
           {/* Main Title */}
           <div className="flex">
             <div className="flex-none">
               {/* image goes here */}
             </div>
-            <h1 className="flex-1 pl-5 text-primary/70 text-serif font-semibold">
+            <h1 className="flex-1 pl-5 text-foreground text-serif font-semibold">
               All Accounts
             </h1>
           </div>
 
-          <h2 className="flex-none pl-3 text-primary/50 text-mono">
+          <h2 className="flex-none pl-3 text-primary text-mono">
             Manage existing accounts here
           </h2>
 
           {/* Table */}
-          <div className="border border-[#753114]/20 rounded-xl bg-white/30 pt-3 mt-5 shadow-sm m-10">
+          <div className="border border-border rounded-xl bg-background pt-3 mt-5 shadow-sm m-10">
 
             <div className="grid grid-cols-4 text-center text-serif font-bold gap-x-20">
               <h1 className="pl-3 text-left">Email</h1>
@@ -283,14 +283,14 @@ export default function AccountManagementPage({ onBack, currentUserEmail }: Acco
           {/* Backdrop */}
           <button
             type="button"
-            className="absolute inset-0 bg-black/40"
+            className="absolute inset-0 bg-background"
             aria-label="Close modal"
             onClick={closeCreateModal}
             disabled={creating}
           />
 
           {/* Modal panel */}
-          <div className="relative z-10 w-full max-w-lg rounded-2xl border border-border bg-white p-6 shadow-xl">
+          <div className="relative z-10 w-full max-w-lg rounded-2xl border border-border bg-background p-6 shadow-xl">
             <div className="flex items-start justify-between">
               <h2 className="text-xl font-semibold text-foreground">Create Account</h2>
               <button
@@ -326,7 +326,7 @@ export default function AccountManagementPage({ onBack, currentUserEmail }: Acco
                 <button
                   type="submit"
                   disabled={creating}
-                  className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                  className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary disabled:opacity-50"
                 >
                   {creating ? "Saving..." : "Save Account"}
                 </button>

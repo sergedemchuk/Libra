@@ -30,7 +30,7 @@ const RememberMeButton: React.FC<LoginRememberMe> =({ Title, Description, MainCh
 
     return (
         <section>
-            <div className = "w-1/4 h-18 p-4 rounded-r-lg border-2 flex items-center mb-4 relative bg-white">
+            <div className = "w-1/4 h-18 p-4 rounded-r-lg border-2 flex items-center mb-4 relative bg-background">
 
                 <div>
                     {/* Title of the box */}

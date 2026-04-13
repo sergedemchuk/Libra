@@ -52,6 +52,12 @@ export default function UploadImportCard({
 }: UploadImportCardProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const processFile = (file: File | null) => {
+    setSelectedFile(file);
+    onFileSelect?.(file);
+  };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] ?? null;
@@ -69,6 +75,21 @@ export default function UploadImportCard({
     setSelectedFile(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
     onReset();
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+  
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+  event.preventDefault();
+  const file = event.dataTransfer.files?.[0] ?? null;
+  processFile(file);
   };
 
   const isActive =
@@ -106,6 +127,9 @@ export default function UploadImportCard({
       {/* Drop zone — disabled while a job is running */}
       <div
         onClick={handleUploadClick}
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
         className={[
           "border-2 border-dashed rounded-lg p-8 text-center transition-colors duration-200",
           isActive || isDone

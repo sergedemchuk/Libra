@@ -85,6 +85,15 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
     try { await send2FACode(email); } catch { /* silent */ }
   };
 
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText("libradev.admin@gmail.com");
+      alert("Copied admin email to clipboard!");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to copy");
+    }
+  }
+
   return (
     <div className="min-h-screen bg-brand-gradient flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-md">
@@ -188,6 +197,17 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
               <button type="submit" disabled={isLoading || code.length !== 6}
                 className="w-full py-2.5 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
                 {isLoading ? "Verifying…" : "Verify & sign in"}
+          {/* Sign Up Link */}
+          <div className="mt-6 pt-6 border-t border-primary/10 text-center">
+            <p className="text-sm text-muted-foreground">
+              Don't have an account?{" "}
+              <button
+                type="button"
+                className="text-primary hover:text-primary/80 font-medium transition-colors"
+                disabled={isLoading}
+                onClick={handleCopy}
+              >
+                Contact your administrator
               </button>
 
               <div className="flex items-center justify-between text-sm">

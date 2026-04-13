@@ -63,7 +63,7 @@ function AccountInfo({ accounts, onDeleted }: AccountInfoProps) {
       {accounts.map((account) => (
         <div key={account.userId}>
           {/* Account row */}
-          <div className="grid grid-cols-4 gap-x-20 text-sm font-semm-bold text-primary border border-[#753114]/20 m-1 rounded-s">
+          <div className="grid grid-cols-4 gap-x-20 text-sm font-semm-bold text-primary border border-border m-1 rounded-s">
             {/* email */}
             <div className="text-left p-4">{account.email}</div>
 
@@ -82,14 +82,14 @@ function AccountInfo({ accounts, onDeleted }: AccountInfoProps) {
               <button
                 type="button"
                 onClick={() => openForm(account.userId)}
-                className="p-2 border border-[#753114]/20 box-border rounded bg-brand-500 hover:bg-brand-gradient text-xs"
+                className="p-2 border border-border box-border rounded bg-brand-500 hover:bg-brand-gradient text-xs"
               >
                 Change Password
               </button>
               <button
                 type="button"
                 onClick={() => handleDelete(account.userId)}
-                className="p-2 border border-[#753114]/20 box-border rounded bg-brand-500 hover:bg-brand-gradient text-xs"
+                className="p-2 border border-border box-border rounded bg-brand-500 hover:bg-brand-gradient text-xs"
               >
                 Delete
               </button>
@@ -105,7 +105,7 @@ function AccountInfo({ accounts, onDeleted }: AccountInfoProps) {
 
           {/* Inline change-password form */}
           {expandedUserId === account.userId && (
-            <div className="mx-1 mb-1 px-4 py-3 border border-[#753114]/20 rounded-b-s bg-white/20">
+            <div className="mx-1 mb-1 px-4 py-3 border border-border rounded-b-s bg-white/20">
               <div className="flex flex-col gap-2 max-w-sm">
                 {/* Header with X close button */}
                 <div className="flex items-center justify-between">

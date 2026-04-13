@@ -42,7 +42,7 @@ const Checkbox: React.FC<CheckboxProps> = ({
             type="checkbox"
             checked={isChecked}
             onChange={handleChange}
-            className="w-4 h-4 text-primary border-accent rounded focus:ring-primary focus:ring-2 cursor-pointer"
+            className="w-4 h-4 bg-gradient-middle text-foreground border border-border rounded focus:ring-primary focus:ring-2 cursor-pointer"
             style={{ accentColor: 'var(--primary)' }}
           />
           <label className="text-sm text-foreground cursor-pointer select-none font-medium">

@@ -68,8 +68,8 @@ const PriceAdjustmentBox: React.FC<PriceAdjustmentBoxProps> = ({
         <p className="text-sm text-muted-foreground">{descriptionEmpty}</p>
         <p className="text-sm text-muted-foreground">{descriptionFilled}</p>
         <div className="flex items-center gap-2">
-          <div className="inline-flex items-stretch rounded-lg border border-gray-300 bg-white">
-            <span className="px-2 flex items-center text-gray-600 font-medium select-none">
+          <div className="inline-flex items-stretch rounded-lg border border-border bg-background">
+            <span className="px-2 flex items-center font-medium select-none">
               $
             </span>
             <input
@@ -78,14 +78,14 @@ const PriceAdjustmentBox: React.FC<PriceAdjustmentBoxProps> = ({
               value={display}
               onChange={handleInput}
               onKeyDown={handleKey}
-              className="w-24 px-3 py-2 outline-none focus:ring-2 focus:ring-primary text-sm text-gray-700"
+              className="w-24 px-3 py-2 bg-background text-foreground outline-none focus:ring-2 focus:ring-primary text-sm"
               aria-label={label}
             />
-            <div className="flex flex-col border-l border-gray-300">
+            <div className="flex flex-col border-l border-border">
               <button
                 type="button"
                 onClick={() => bump(1)}
-                className="px-2 py-1 hover:bg-gray-50 active:bg-gray-100 text-sm rounded-br-lg"
+                className="px-2 py-1 hover:bg-primary active:bg-gradient-middle text-sm rounded-tr-lg"
                 aria-label={`Increase ${label} by ${step.toFixed(precision)}`}
                 title={`Increase by ${step.toFixed(precision)}`}
               >
@@ -94,7 +94,7 @@ const PriceAdjustmentBox: React.FC<PriceAdjustmentBoxProps> = ({
               <button
                 type="button"
                 onClick={() => bump(-1)}
-                className="px-2 py-1 hover:bg-gray-50 active:bg-gray-100 text-sm rounded-br-lg"
+                className="px-2 py-1 hover:bg-primary active:bg-primary text-sm rounded-br-lg"
                 aria-label={`Decrease ${label} by ${step.toFixed(precision)}`}
                 title={`Decrease by ${step.toFixed(precision)}`}
               >
@@ -106,21 +106,6 @@ const PriceAdjustmentBox: React.FC<PriceAdjustmentBoxProps> = ({
       </div>
     </section>
   );
-  //return (
-  //  <section className="rounded-xl border border-primary/20 bg-card/40 p-6 md:p-8">
-  //    <div className="space-y-4">
-  //      {/* Header */}
-  //      <div>
-  //        <h3 className="text-lg font-semibold text-foreground mb-2">{label}</h3>
-  //        <div className="space-y-2">
-  //          <p className="text-sm text-muted-foreground">{descriptionEmpty}</p>
-  //          <p className="text-sm text-muted-foreground">{descriptionFilled}</p>
-  //        </div>
-  //      </div>
-  //    </div>
-  //  </section>
-  //);
-  
 };
 
 export default PriceAdjustmentBox;

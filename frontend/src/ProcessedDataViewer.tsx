@@ -46,7 +46,7 @@ function EditableCell({
             setEditing(false);
           }
         }}
-        className="w-full px-2 py-1 text-sm bg-white border border-primary rounded
+        className="w-full px-2 py-1 text-sm bg-background border border-primary rounded
                    focus:outline-none focus:ring-2 focus:ring-primary/40
                    text-foreground font-mono"
       />
