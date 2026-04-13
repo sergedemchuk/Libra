@@ -1,25 +1,32 @@
 /**
- * Email Lambda — handles three actions backed by AWS SES:
- *   1. forgot-password : generate reset token, store in DynamoDB, email reset link
- *   2. send-2fa        : generate 6-digit code, store with TTL, email to user
- *   3. notify-admin    : email admin account about account-DB changes
+ * Email Lambda — handles SES sending for reset, 2FA, admin notifications.
  *
- * Invoked via API Gateway: POST /email  body={ action, ...payload }
+ * Routes (all via POST /email, action in body):
+ *   action: 'forgot-password' → email reset link (30-min TTL token in DDB)
+ *   action: 'send-2fa'        → email 6-digit code (10-min TTL)
+ *   action: 'verify-2fa'      → check code
+ *   action: 'notify-admin'    → email admin about account-DB changes
  */
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { SESv2Client, SendEmailCommand } from '@aws-sdk/client-sesv2';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, PutCommand, GetCommand } from '@aws-sdk/lib-dynamodb';
+import {
+  DynamoDBDocumentClient,
+  PutCommand,
+  GetCommand,
+  QueryCommand,
+} from '@aws-sdk/lib-dynamodb';
 import { randomBytes, randomInt } from 'crypto';
 
 const ses = new SESv2Client({});
 const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 
-const FROM        = process.env.SES_FROM_ADDRESS!;        // verified sender
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL!;             // verified admin
-const ACCOUNTS_TBL = process.env.ACCOUNTS_TABLE!;
-const TOKENS_TBL   = process.env.EMAIL_TOKENS_TABLE!;     // see infra
-const APP_URL      = process.env.APP_URL ?? 'http://localhost:3000';
+const FROM                 = process.env.SES_FROM_ADDRESS!;
+const ADMIN_EMAIL          = process.env.ADMIN_EMAIL!;
+const ACCOUNTS_TABLE       = process.env.ACCOUNTS_TABLE!;
+const ACCOUNTS_EMAIL_INDEX = process.env.ACCOUNTS_EMAIL_INDEX ?? 'email-index';
+const TOKENS_TABLE         = process.env.EMAIL_TOKENS_TABLE!;
+const APP_URL              = process.env.APP_URL ?? 'http://localhost:3000';
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -29,28 +36,36 @@ const cors = {
 const ok  = (b: object) => ({ statusCode: 200, headers: cors, body: JSON.stringify(b) });
 const bad = (m: string, s = 400) => ({ statusCode: s, headers: cors, body: JSON.stringify({ error: m }) });
 
+/** Look up an account by email via the GSI. */
 async function userExists(email: string): Promise<boolean> {
-  const r = await ddb.send(new GetCommand({ TableName: ACCOUNTS_TBL, Key: { email } }));
-  return !!r.Item;
+  const r = await ddb.send(new QueryCommand({
+    TableName: ACCOUNTS_TABLE,
+    IndexName: ACCOUNTS_EMAIL_INDEX,
+    KeyConditionExpression: 'email = :email',
+    ExpressionAttributeValues: { ':email': email.toLowerCase().trim() },
+    Limit: 1,
+  }));
+  return (r.Count ?? 0) > 0;
 }
 
 async function sendMail(to: string, subject: string, html: string, text: string) {
   await ses.send(new SendEmailCommand({
     FromEmailAddress: FROM,
     Destination: { ToAddresses: [to] },
-    Content: { Simple: { Subject: { Data: subject }, Body: {
-      Html: { Data: html }, Text: { Data: text },
-    }}},
+    Content: { Simple: {
+      Subject: { Data: subject },
+      Body: { Html: { Data: html }, Text: { Data: text } },
+    }},
   }));
 }
 
 async function forgotPassword(email: string) {
-  // Always return 200 to avoid email enumeration. Only send if user exists.
+  // Always return 200 (prevents email enumeration). Only send if user exists.
   if (await userExists(email)) {
     const token = randomBytes(32).toString('hex');
-    const ttl = Math.floor(Date.now() / 1000) + 60 * 30; // 30 min
+    const ttl = Math.floor(Date.now() / 1000) + 60 * 30;
     await ddb.send(new PutCommand({
-      TableName: TOKENS_TBL,
+      TableName: TOKENS_TABLE,
       Item: { token, email, kind: 'reset', ttl },
     }));
     const link = `${APP_URL}/reset?token=${token}`;
@@ -64,9 +79,9 @@ async function forgotPassword(email: string) {
 async function send2FA(email: string) {
   if (!(await userExists(email))) return bad('Account not found', 404);
   const code = String(randomInt(0, 1_000_000)).padStart(6, '0');
-  const ttl = Math.floor(Date.now() / 1000) + 60 * 10; // 10 min
+  const ttl = Math.floor(Date.now() / 1000) + 60 * 10;
   await ddb.send(new PutCommand({
-    TableName: TOKENS_TBL,
+    TableName: TOKENS_TABLE,
     Item: { token: `2fa:${email}`, email, code, kind: '2fa', ttl },
   }));
   await sendMail(email, 'Libra — Your verification code',
@@ -77,7 +92,7 @@ async function send2FA(email: string) {
 
 async function verify2FA(email: string, code: string) {
   const r = await ddb.send(new GetCommand({
-    TableName: TOKENS_TBL, Key: { token: `2fa:${email}` },
+    TableName: TOKENS_TABLE, Key: { token: `2fa:${email}` },
   }));
   if (!r.Item || r.Item.code !== code) return bad('Invalid or expired code', 401);
   if (r.Item.ttl < Math.floor(Date.now() / 1000)) return bad('Code expired', 401);

@@ -9,6 +9,7 @@ import { ProcessingLambda } from './processing-lambda-construct';
 import { FileHandlingLambdas } from './file-handling-lambdas';
 import { UserLambdas } from './user-lambdas';
 import { LibraryCatalogApi } from './api-gateway';
+import { EmailLambda } from './email-lambda';
 
 class LibraryCatalogStack extends Stack {
   constructor(scope: App, id: string, props?: StackProps) {
@@ -16,10 +17,10 @@ class LibraryCatalogStack extends Stack {
 
     // Create DynamoDB tables
     const tables = new LibraryCatalogTables(this, 'Tables');
-    
+
     // Create S3 buckets
     const buckets = new S3Buckets(this, 'Buckets');
-    
+
     // Create file handling Lambda functions
     const fileHandling = new FileHandlingLambdas(this, 'FileHandling', {
       jobStatusTable: tables.jobStatus,
@@ -34,7 +35,7 @@ class LibraryCatalogStack extends Stack {
 
     // Get ISBNdb API secret (must be created manually first)
     const isbndbSecret = Secret.fromSecretNameV2(this, 'IsbndbSecret', 'isbndb-api-key');
-    
+
     // Create main processing Lambda
     const processing = new ProcessingLambda(this, 'Processing', {
       priceCacheTable: tables.priceCache,
@@ -51,8 +52,25 @@ class LibraryCatalogStack extends Stack {
       statusFunction: fileHandling.statusFunction,
       accountsFunction: userLambdas.accountsFunction,
     });
-    
-    // Database outputs
+
+    // ── NEW: Email Lambda (SES-backed password reset, 2FA, admin notifications)
+    //
+    // IMPORTANT — update these three values to match your SES-verified identities:
+    //   - sesFromAddress: the verified sender (shows as "From:" in every email)
+    //   - adminEmail:     the verified admin who receives account-change notifications
+    //   - appUrl:         the frontend origin used to build the password reset link
+    //
+    // In SES sandbox mode, every recipient must also be verified in SES.
+    new EmailLambda(this, 'EmailLambda', {
+      api: api.api,                           // the underlying RestApi
+      accountsTable: tables.userAccounts,     // reuses existing user-accounts table
+      sesFromAddress: 'libradev.admin@gmail.com',
+      adminEmail:     'libradev.admin@gmail.com',
+      appUrl:         'http://localhost:3000',
+    });
+
+    // ── Outputs ─────────────────────────────────────────────────────────────
+
     new CfnOutput(this, 'PriceCacheTableName', {
       value: tables.priceCache.tableName,
       description: 'Price cache DynamoDB table name',
@@ -67,8 +85,7 @@ class LibraryCatalogStack extends Stack {
       value: tables.dailyUsage.tableName,
       description: 'Daily usage tracking DynamoDB table name',
     });
-    
-    // S3 outputs
+
     new CfnOutput(this, 'InputBucketName', {
       value: buckets.uploadBucket.bucketName,
       description: 'Input S3 bucket name',
@@ -78,13 +95,12 @@ class LibraryCatalogStack extends Stack {
       value: buckets.outputBucket.bucketName,
       description: 'Output S3 bucket name',
     });
-    
-    // Lambda outputs
+
     new CfnOutput(this, 'UploadFunctionName', {
       value: fileHandling.uploadFunction.functionName,
       description: 'Upload Lambda function name',
     });
-    
+
     new CfnOutput(this, 'StatusFunctionName', {
       value: fileHandling.statusFunction.functionName,
       description: 'Status Lambda function name',
@@ -105,12 +121,11 @@ class LibraryCatalogStack extends Stack {
       description: 'User accounts DynamoDB table name',
     });
 
-    // Environment configuration for frontend
     new CfnOutput(this, 'FrontendConfig', {
       value: JSON.stringify({
         apiUrl: api.apiUrl,
         region: this.region,
-        apiId: api.api.restApiId
+        apiId: api.api.restApiId,
       }),
       description: 'Configuration object for frontend application',
     });

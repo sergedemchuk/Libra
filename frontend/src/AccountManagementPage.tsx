@@ -9,7 +9,7 @@ interface AccountManagementPageProps {
   currentUserEmail: string;
 }
 
-export default function AccountManagementPage({ onBack }: AccountManagementPageProps) {
+export default function AccountManagementPage({ onBack, currentUserEmail }: AccountManagementPageProps) {
   const [emailOnCreate, setEmailOnCreate] = useState<boolean>(false);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);

@@ -1,45 +1,117 @@
-// frontend/src/api/client.ts
+/**
+ * Libra API Client
+ * Wraps the API Gateway endpoints:
+ *   POST /upload           → get presigned S3 URL + jobId
+ *   GET  /status/{jobId}   → poll processing status
+ *   /accounts              → account management
+ *   POST /email            → password reset, 2FA, admin notifications (NEW)
+ */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? "";
+const API_BASE_URL = import.meta.env.VITE_API_URL as string;
 
-// ─── Upload / Job API (unchanged) ─────────────────────────────────────────────
+if (!API_BASE_URL) {
+  console.error(
+    "[LibraAPI] VITE_API_URL is not set. Copy .env.example → .env.local and fill in the value."
+  );
+}
 
-export interface UploadInitResponse {
+// ─── Request / Response shapes (must match lambda types) ─────────────────────
+
+export interface UploadSettings {
+  priceRounding: boolean;
+  priceAdjustment?: number;
+}
+
+export interface InitiateUploadRequest {
+  fileName: string;
+  fileSize: number;
+  settings: UploadSettings;
+}
+
+export interface InitiateUploadResponse {
   jobId: string;
   uploadUrl: string;
+  expires: string;
 }
+
+export type JobStatus = "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
 
 export interface JobStatusResponse {
   jobId: string;
-  status: "pending" | "processing" | "completed" | "failed";
-  progress?: number;
+  status: JobStatus;
+  fileName: string;
+  progress?: {
+    total: number;
+    processed: number;
+  };
+  downloadUrl?: string;
   error?: string;
-  resultUrl?: string;
 }
 
-export async function initiateUpload(filename: string, settings?: object): Promise<UploadInitResponse> {
+// ─── Upload / Job API ─────────────────────────────────────────────────────────
+
+export async function initiateUpload(
+  req: InitiateUploadRequest
+): Promise<InitiateUploadResponse> {
   const res = await fetch(`${API_BASE_URL}/upload`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ filename, settings: settings ?? {} }),
+    body: JSON.stringify(req),
   });
+
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new Error(body.error ?? `Upload init failed (${res.status})`);
+    throw new Error(body.error ?? `Upload initiation failed (${res.status})`);
   }
+
   return res.json();
+}
+
+export async function uploadFileToS3(
+  presignedUrl: string,
+  file: File,
+  onProgress?: (pct: number) => void
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+
+    if (onProgress) {
+      xhr.upload.addEventListener("progress", (e) => {
+        if (e.lengthComputable) {
+          onProgress(Math.round((e.loaded / e.total) * 100));
+        }
+      });
+    }
+
+    xhr.addEventListener("load", () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve();
+      } else {
+        reject(new Error(`S3 upload failed with status ${xhr.status}`));
+      }
+    });
+
+    xhr.addEventListener("error", () => reject(new Error("Network error during S3 upload")));
+    xhr.addEventListener("abort", () => reject(new Error("Upload aborted")));
+
+    xhr.open("PUT", presignedUrl);
+    xhr.setRequestHeader("Content-Type", "text/csv");
+    xhr.send(file);
+  });
 }
 
 export async function getJobStatus(jobId: string): Promise<JobStatusResponse> {
   const res = await fetch(`${API_BASE_URL}/status/${jobId}`);
+
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new Error(body.error ?? `Status check failed (${res.status})`);
   }
+
   return res.json();
 }
 
-// ─── Account API (unchanged) ──────────────────────────────────────────────────
+// ─── Account API ──────────────────────────────────────────────────────────────
 
 export interface Account {
   userId: string;
