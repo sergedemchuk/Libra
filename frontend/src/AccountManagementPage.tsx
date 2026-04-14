@@ -82,22 +82,6 @@ export default function AccountManagementPage({ onBack, currentUserEmail }: Acco
           Account Management Page
         </h1>
 
-        {/* Small icon under title */}
-        <div className="mt-2">
-          <svg
-            className="h-10 w-10 text-primary"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-          </svg>
-        </div>
-
         <p className="mt-2 text-sm text-muted-foreground">Manage user accounts</p>
       </div>
 
