@@ -43,7 +43,6 @@ export default function InstructionsBox() {
           <ul className="ms-5 list-disc space-y-1 text-muted-foreground">
             <li>CSV files (.csv)</li>
             <li>Excel files (.xlsx, .xls)</li>
-            <li>Tab-separated values (.tsv)</li>
           </ul>
         </div>
 

@@ -257,7 +257,7 @@ export default function AccountManagementPage({ onBack, currentUserEmail }: Acco
             </div>
 
             {/* necessary do not remove */}
-            <div className="m-10"></div>
+            {/*<div className="m-10"></div>*/}
 
           </div>
         </div>
@@ -267,14 +267,14 @@ export default function AccountManagementPage({ onBack, currentUserEmail }: Acco
           {/* Backdrop */}
           <button
             type="button"
-            className="absolute inset-0 bg-background"
+            className="relative inset-0 bg-background"
             aria-label="Close modal"
             onClick={closeCreateModal}
             disabled={creating}
           />
 
           {/* Modal panel */}
-          <div className="relative z-10 w-full max-w-lg rounded-2xl border border-border bg-background p-6 shadow-xl">
+          <div className="relative z-10 w-full max-w-lg rounded-2xl border border-border bg-[#f0ead6] p-6 shadow-xl">
             <div className="flex items-start justify-between">
               <h2 className="text-xl font-semibold text-foreground">Create Account</h2>
               <button

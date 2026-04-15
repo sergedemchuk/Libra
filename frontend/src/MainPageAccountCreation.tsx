@@ -97,10 +97,10 @@ export default function CreateAccountMainPage({EmailString, PasswordString, Pass
     }
 
         return (
-            <div className ="border-primary/20">
+            <div className ="border-primary/5">
                 {/*Button to create account*/}
                 <button
-                    className = "text-primary-foreground font-medium"
+                    className = "text-primary-foreground bg-[#f0ead6] border border-border px-2 rounded-lg shadow font-medium"
                     onClick={VerifyButton}>
                     Create Account
                 </button>
