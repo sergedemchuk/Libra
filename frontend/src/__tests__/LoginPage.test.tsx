@@ -15,16 +15,23 @@ import LoginPage from '../LoginPage';
 
 vi.mock('../api/client', () => ({
   loginAccount: vi.fn(),
+  send2FACode: vi.fn(),
+  verify2FACode: vi.fn(),
 }));
 
-import { loginAccount } from '../api/client';
+import { loginAccount, send2FACode, verify2FACode } from '../api/client';
 const mockLoginAccount = loginAccount as ReturnType<typeof vi.fn>;
+const mockSend2FACode = send2FACode as ReturnType<typeof vi.fn>;
+const mockVerify2FACode = verify2FACode as ReturnType<typeof vi.fn>;
 
 // ─── Setup ────────────────────────────────────────────────────────────────────
 
 beforeEach(() => {
   vi.clearAllMocks();
   localStorage.clear();
+  // Default: 2FA calls succeed
+  mockSend2FACode.mockResolvedValue({ message: 'Code sent' });
+  mockVerify2FACode.mockResolvedValue({ success: true });
 });
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -36,6 +43,14 @@ async function submitLoginForm(email: string, password: string, rememberMe = fal
     await userEvent.click(screen.getByLabelText(/remember me/i));
   }
   await userEvent.click(screen.getByRole('button', { name: /sign in/i }));
+}
+
+/** After credentials succeed and 2FA screen appears, fill in the code and submit. */
+async function complete2FA(code = '123456') {
+  // Wait for the 2FA input to appear
+  const codeInput = await screen.findByLabelText(/verification code/i);
+  await userEvent.type(codeInput, code);
+  await userEvent.click(screen.getByRole('button', { name: /verify/i }));
 }
 
 // =============================================================================
@@ -92,6 +107,7 @@ describe('Successful login', () => {
 
     render(<LoginPage onLoginSuccess={onLoginSuccess} />);
     await submitLoginForm('user@example.com', 'password123');
+    await complete2FA();
 
     await waitFor(() => {
       expect(onLoginSuccess).toHaveBeenCalledTimes(1);
@@ -117,9 +133,11 @@ describe('Successful login', () => {
 
     render(<LoginPage onLoginSuccess={vi.fn()} />);
     await submitLoginForm('user@example.com', 'password123', true);
+    await complete2FA();
 
-    await waitFor(() => expect(mockLoginAccount).toHaveBeenCalled());
-    expect(localStorage.getItem('libra_remember')).toBe('true');
+    await waitFor(() => {
+      expect(localStorage.getItem('libra_remember')).toBe('true');
+    });
   });
 });
 

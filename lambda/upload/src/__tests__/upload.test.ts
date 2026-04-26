@@ -236,7 +236,70 @@ describe('Request body validation', () => {
       expect(result.statusCode).toBe(200);
     }
   });
+
+  it('returns 400 for unsupported file extensions like .pdf', async () => {
+    const result = await handler(
+      makeEvent({ body: validBody({ fileName: 'report.pdf' }) }),
+      STUB_CONTEXT,
+    );
+    expect(result.statusCode).toBe(400);
+    expect(JSON.parse(result.body).error).toContain('File type not supported');
+  });
+
+  it('returns 400 for unsupported file extensions like .json', async () => {
+    const result = await handler(
+      makeEvent({ body: validBody({ fileName: 'data.json' }) }),
+      STUB_CONTEXT,
+    );
+    expect(result.statusCode).toBe(400);
+    expect(JSON.parse(result.body).error).toContain('File type not supported');
+  });
+
+  it('accepts .xlsx files', async () => {
+    const result = await handler(
+      makeEvent({ body: validBody({ fileName: 'catalog.xlsx' }) }),
+      STUB_CONTEXT,
+    );
+    expect(result.statusCode).toBe(200);
+  });
+
+  it('accepts .xls files', async () => {
+    const result = await handler(
+      makeEvent({ body: validBody({ fileName: 'catalog.xls' }) }),
+      STUB_CONTEXT,
+    );
+    expect(result.statusCode).toBe(200);
+  });
+
+  it('accepts .tsv files', async () => {
+    const result = await handler(
+      makeEvent({ body: validBody({ fileName: 'catalog.tsv' }) }),
+      STUB_CONTEXT,
+    );
+    expect(result.statusCode).toBe(200);
+  });
+
+  it('rejects file extensions in a case-insensitive check', async () => {
+    const result = await handler(
+      makeEvent({ body: validBody({ fileName: 'catalog.CSV' }) }),
+      STUB_CONTEXT,
+    );
+    expect(result.statusCode).toBe(200);
+  });
 });
+
+// =============================================================================
+// MALFORMED JSON BODY
+// =============================================================================
+
+describe('Malformed JSON body', () => {
+  it('returns 500 when request body is not valid JSON', async () => {
+    const result = await handler(
+      makeEvent({ body: '{ invalid json !!!' }),
+      STUB_CONTEXT,
+    );
+    expect(result.statusCode).toBe(500);
+  });
 
 // =============================================================================
 // JOB RECORD CREATION IN DYNAMODB

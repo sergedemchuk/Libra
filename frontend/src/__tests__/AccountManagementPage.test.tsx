@@ -126,7 +126,7 @@ describe('Account creation — AccountManagementPage modal', () => {
     await userEvent.click(screen.getByRole('button', { name: /save account/i }));
 
     await waitFor(() => {
-      expect(mockCreateAccount).toHaveBeenCalledWith('new@example.com', 'password123');
+      expect(mockCreateAccount).toHaveBeenCalledWith('new@example.com', 'password123', 'user');
     });
   });
 

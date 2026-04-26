@@ -64,7 +64,7 @@ describe('createAccount()', () => {
     );
   });
 
-  it('sends email and password in the JSON request body', async () => {
+  it('sends email, password, and role in the JSON request body', async () => {
     mockFetch.mockResolvedValueOnce(
       mockOkResponse({ userId: 'u1', email: 'a@b.com', dateCreated: 'x', lastLogin: 'x' })
     );
@@ -72,7 +72,7 @@ describe('createAccount()', () => {
     await createAccount('a@b.com', 'mypassword');
 
     const [, options] = mockFetch.mock.calls[0];
-    expect(JSON.parse(options.body)).toEqual({ email: 'a@b.com', password: 'mypassword' });
+    expect(JSON.parse(options.body)).toEqual({ email: 'a@b.com', password: 'mypassword', role: 'user' });
   });
 
   it('sets Content-Type: application/json header', async () => {

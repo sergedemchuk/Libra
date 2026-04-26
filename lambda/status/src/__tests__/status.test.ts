@@ -318,6 +318,18 @@ describe('Download URL for COMPLETED jobs', () => {
     expect(JSON.parse(result.body).downloadUrl).toBeUndefined();
   });
 
+  it('does NOT generate a download URL when COMPLETED but outputFileKey is missing', async () => {
+    mockDynamoSend.mockResolvedValueOnce({
+      Item: makeJobItem({ status: 'COMPLETED' }),
+    });
+
+    const result = await handler(makeEvent(), STUB_CONTEXT);
+
+    expect(result.statusCode).toBe(200);
+    expect(mockGetSignedUrl).not.toHaveBeenCalled();
+    expect(JSON.parse(result.body).downloadUrl).toBeUndefined();
+  });
+
   it('still returns 200 if download URL generation fails after a COMPLETED job', async () => {
     mockDynamoSend.mockResolvedValueOnce({
       Item: makeJobItem({

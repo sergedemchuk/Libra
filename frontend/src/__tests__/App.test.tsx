@@ -31,6 +31,8 @@ vi.mock('../api/client', () => ({
   }),
   listAccounts: vi.fn().mockResolvedValue([]),
   createAccount: vi.fn(),
+  send2FACode: vi.fn().mockResolvedValue({ message: 'Code sent' }),
+  verify2FACode: vi.fn().mockResolvedValue({ success: true }),
 }));
 
 // Mock components that are expensive or have complex deps
@@ -92,6 +94,11 @@ describe('Login flow', () => {
     await userEvent.type(screen.getByLabelText(/password/i), 'password123');
     await userEvent.click(screen.getByRole('button', { name: /sign in/i }));
 
+    // Complete the 2FA step
+    const codeInput = await screen.findByLabelText(/verification code/i);
+    await userEvent.type(codeInput, '123456');
+    await userEvent.click(screen.getByRole('button', { name: /verify/i }));
+
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: /upload catalog data/i })).toBeInTheDocument();
     });
@@ -151,6 +158,7 @@ describe('Page navigation', () => {
 
   it('navigates to the account management page', async () => {
     localStorage.setItem('libra_remember', 'true');
+    localStorage.setItem('libra_role', 'admin');
     render(<App />);
 
     // MenuBar button is "Account Management"
@@ -164,6 +172,7 @@ describe('Page navigation', () => {
 
   it('navigates back to upload from account management', async () => {
     localStorage.setItem('libra_remember', 'true');
+    localStorage.setItem('libra_role', 'admin');
     render(<App />);
 
     const accountsBtn = screen.getByRole('button', { name: /^account management$/i });

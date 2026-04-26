@@ -10,7 +10,7 @@ function detectFileType(fileName: string): SupportedFileType {
   if (lower.endsWith('.xlsx')) return 'xlsx';
   if (lower.endsWith('.xml')) return 'xml';
 
-  throw new Error('Unsupported file type for file: ${fileName}');
+  throw new Error(`Unsupported file type for file: ${fileName}`);
 }
 
 export async function parseUploadedDocument(
@@ -27,6 +27,6 @@ export async function parseUploadedDocument(
     case 'xml':
       return parseXmlDocument(fileData);
     default:
-      throw new Error('Unsupported file type: ${fileType}');
+      throw new Error(`Unsupported file type: ${fileType}`);
   }
 }

@@ -455,9 +455,9 @@ describe('DELETE /accounts/{userId} — account deletion', () => {
 
   // ── Protected account guard ───────────────────────────────────────────────
 
-  it('returns 400 when trying to delete the protected libradev@libra.com account', async () => {
+  it('returns 400 when trying to delete the protected libradev.admin@gmail.com account', async () => {
     mockSend.mockResolvedValueOnce({
-      Item: { userId: 'protected-id', email: 'libradev@libra.com' },
+      Item: { userId: 'protected-id', email: 'libradev.admin@gmail.com' },
     });
 
     const result = await handler(makeEvent({
@@ -472,7 +472,7 @@ describe('DELETE /accounts/{userId} — account deletion', () => {
 
   it('does NOT call DeleteItemCommand for the protected account', async () => {
     mockSend.mockResolvedValueOnce({
-      Item: { userId: 'protected-id', email: 'libradev@libra.com' },
+      Item: { userId: 'protected-id', email: 'libradev.admin@gmail.com' },
     });
 
     await handler(makeEvent({
@@ -710,7 +710,8 @@ describe('GET /accounts — list all accounts', () => {
     expect(ScanCommand).toHaveBeenCalledWith(
       expect.objectContaining({
         TableName: 'test-user-accounts',
-        ProjectionExpression: 'userId, email, dateCreated, lastLogin',
+        ProjectionExpression: 'userId, email, dateCreated, lastLogin, #r',
+        ExpressionAttributeNames: { '#r': 'role' },
       })
     );
   });
@@ -879,6 +880,118 @@ describe('PUT /accounts/{userId}/password — change password', () => {
     expect(putCall.Item.dateCreated).toBe('2024-01-01T00:00:00.000Z');
     // New hash should replace old hash
     expect(putCall.Item.passwordHash).toBe('$2a$10$hashed_password');
+  });
+});
+
+// =============================================================================
+// ROLE ASSIGNMENT — account creation and login
+// =============================================================================
+
+describe('Role assignment on account creation', () => {
+
+  it('defaults to "user" role when no role is specified', async () => {
+    mockSend.mockResolvedValueOnce({ Items: [] });
+    mockSend.mockResolvedValueOnce({});
+
+    const result = await handler(makeEvent({
+      httpMethod: 'POST',
+      path: '/accounts',
+      body: JSON.stringify({ email: 'new@example.com', password: 'password123' }),
+    }));
+
+    const putCall = (PutItemCommand as unknown as jest.Mock).mock.calls[0][0];
+    expect(putCall.Item.role).toBe('user');
+    expect(JSON.parse(result.body).role).toBe('user');
+  });
+
+  it('allows explicit "admin" role to be set on creation', async () => {
+    mockSend.mockResolvedValueOnce({ Items: [] });
+    mockSend.mockResolvedValueOnce({});
+
+    const result = await handler(makeEvent({
+      httpMethod: 'POST',
+      path: '/accounts',
+      body: JSON.stringify({ email: 'admin@company.com', password: 'password123', role: 'admin' }),
+    }));
+
+    const putCall = (PutItemCommand as unknown as jest.Mock).mock.calls[0][0];
+    expect(putCall.Item.role).toBe('admin');
+    expect(JSON.parse(result.body).role).toBe('admin');
+  });
+
+  it('forces "admin" role for the protected email libradev.admin@gmail.com', async () => {
+    mockSend.mockResolvedValueOnce({ Items: [] });
+    mockSend.mockResolvedValueOnce({});
+
+    await handler(makeEvent({
+      httpMethod: 'POST',
+      path: '/accounts',
+      body: JSON.stringify({ email: 'libradev.admin@gmail.com', password: 'password123' }),
+    }));
+
+    const putCall = (PutItemCommand as unknown as jest.Mock).mock.calls[0][0];
+    expect(putCall.Item.role).toBe('admin');
+  });
+
+  it('returns the role field in the 201 creation response', async () => {
+    mockSend.mockResolvedValueOnce({ Items: [] });
+    mockSend.mockResolvedValueOnce({});
+
+    const result = await handler(makeEvent({
+      httpMethod: 'POST',
+      path: '/accounts',
+      body: JSON.stringify({ email: 'new@example.com', password: 'password123' }),
+    }));
+
+    expect(JSON.parse(result.body).role).toBeDefined();
+  });
+});
+
+describe('Role field in login response', () => {
+
+  it('returns the role field on successful login', async () => {
+    const existingUser = {
+      userId: 'u1',
+      email: 'user@example.com',
+      passwordHash: 'stored_hash',
+      role: 'user',
+      dateCreated: '2024-01-01T00:00:00.000Z',
+      lastLogin: '2024-01-01T00:00:00.000Z',
+    };
+    mockSend.mockResolvedValueOnce({ Items: [existingUser] });
+    (bcrypt.compare as jest.Mock).mockResolvedValueOnce(true);
+    mockSend.mockResolvedValueOnce({});
+
+    const result = await handler(makeEvent({
+      httpMethod: 'POST',
+      path: '/accounts/login',
+      body: JSON.stringify({ email: 'user@example.com', password: 'correctpassword' }),
+    }));
+
+    const body = JSON.parse(result.body);
+    expect(body.role).toBe('user');
+  });
+
+  it('returns "admin" role for the protected admin email even without stored role', async () => {
+    const existingUser = {
+      userId: 'u1',
+      email: 'libradev.admin@gmail.com',
+      passwordHash: 'stored_hash',
+      dateCreated: '2024-01-01T00:00:00.000Z',
+      lastLogin: '2024-01-01T00:00:00.000Z',
+    };
+    mockSend.mockResolvedValueOnce({ Items: [existingUser] });
+    (bcrypt.compare as jest.Mock).mockResolvedValueOnce(true);
+    mockSend.mockResolvedValueOnce({});
+
+    const result = await handler(makeEvent({
+      httpMethod: 'POST',
+      path: '/accounts/login',
+      body: JSON.stringify({ email: 'libradev.admin@gmail.com', password: 'correctpassword' }),
+    }));
+
+    const body = JSON.parse(result.body);
+    expect(body.role).toBe('admin');
   });
 });
 

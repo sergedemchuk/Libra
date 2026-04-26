@@ -38,6 +38,9 @@ const PROTECTED_ADMIN_EMAIL = "libradev.admin@gmail.com";
 beforeEach(() => {
   localStorage.clear();
   vi.restoreAllMocks();
+  // Default: 2FA calls succeed
+  vi.spyOn(apiClient, "send2FACode").mockResolvedValue({ message: "Code sent" });
+  vi.spyOn(apiClient, "verify2FACode").mockResolvedValue({ success: true });
 });
 
 afterEach(() => {
@@ -67,7 +70,12 @@ describe("LoginPage", () => {
     await userEvent.type(screen.getByLabelText(/password/i), "supersecret");
     fireEvent.click(screen.getByRole("button", { name: /sign in|log in/i }));
 
-    await waitFor(() => expect(onLoginSuccess).toHaveBeenCalledWith("admin"));
+    // Complete the 2FA step
+    const codeInput = await screen.findByLabelText(/verification code/i);
+    await userEvent.type(codeInput, "123456");
+    await userEvent.click(screen.getByRole("button", { name: /verify/i }));
+
+    await waitFor(() => expect(onLoginSuccess).toHaveBeenCalledWith("admin", PROTECTED_ADMIN_EMAIL));
   });
 
   it("calls onLoginSuccess with 'user' when the API returns a regular account", async () => {
@@ -87,7 +95,12 @@ describe("LoginPage", () => {
     await userEvent.type(screen.getByLabelText(/password/i), "password123");
     fireEvent.click(screen.getByRole("button", { name: /sign in|log in/i }));
 
-    await waitFor(() => expect(onLoginSuccess).toHaveBeenCalledWith("user"));
+    // Complete the 2FA step
+    const codeInput = await screen.findByLabelText(/verification code/i);
+    await userEvent.type(codeInput, "123456");
+    await userEvent.click(screen.getByRole("button", { name: /verify/i }));
+
+    await waitFor(() => expect(onLoginSuccess).toHaveBeenCalledWith("user", "alice@example.com"));
   });
 
   it("defaults unknown role values from the API to 'user' (defensive)", async () => {
@@ -108,7 +121,12 @@ describe("LoginPage", () => {
     await userEvent.type(screen.getByLabelText(/password/i), "password123");
     fireEvent.click(screen.getByRole("button", { name: /sign in|log in/i }));
 
-    await waitFor(() => expect(onLoginSuccess).toHaveBeenCalledWith("user"));
+    // Complete the 2FA step
+    const codeInput = await screen.findByLabelText(/verification code/i);
+    await userEvent.type(codeInput, "123456");
+    await userEvent.click(screen.getByRole("button", { name: /verify/i }));
+
+    await waitFor(() => expect(onLoginSuccess).toHaveBeenCalledWith("user", "bob@example.com"));
   });
 
   it("persists role to localStorage only when 'Remember me' is checked", async () => {
@@ -135,6 +153,11 @@ describe("LoginPage", () => {
     if (remember) fireEvent.click(remember);
 
     fireEvent.click(screen.getByRole("button", { name: /sign in|log in/i }));
+
+    // Complete the 2FA step
+    const codeInput = await screen.findByLabelText(/verification code/i);
+    await userEvent.type(codeInput, "123456");
+    await userEvent.click(screen.getByRole("button", { name: /verify/i }));
 
     await waitFor(() => expect(onLoginSuccess).toHaveBeenCalled());
 

@@ -1,4 +1,3 @@
-
 // Tests only the file upload capabilities, distinct from useFileUpload.test.ts
 
 // Purpose: tests the ability of the file upload mechanism
@@ -12,6 +11,25 @@ import { describe, it, expect, vi, beforeEach, test } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { useFileUpload } from "../hooks/useFileUpload";
 // -----Imports necessary for testing-----
+
+// ─── Mock API client so the upload lifecycle completes ────────────────────────
+vi.mock('../api/client', () => ({
+  initiateUpload: vi.fn().mockResolvedValue({
+    jobId: 'j1',
+    uploadUrl: 'http://fake-s3.local/upload',
+    expires: '2099-01-01T00:00:00Z',
+  }),
+  uploadFileToS3: vi.fn().mockResolvedValue(undefined),
+  getJobStatus: vi.fn().mockResolvedValue({
+    jobId: 'j1',
+    status: 'COMPLETED',
+    fileName: 'test1.csv',
+    downloadUrl: 'http://fake-s3.local/download',
+  }),
+  loginAccount: vi.fn(),
+  listAccounts: vi.fn(),
+  createAccount: vi.fn(),
+}));
 
 
 
