@@ -1,134 +1,237 @@
 #!/bin/bash
 
-# Library Catalog API Test Script
-# Usage: ./test-api.sh <API_URL>
+# ─────────────────────────────────────────────────────────────────────────────
+# Libra — Full Test Suite Runner
+# Iterates through every Lambda directory and the frontend, runs npm install
+# and npm test in each, and prints an aggregated pass/fail summary at the end.
+#
+# Usage:
+#   ./scripts/test-api.sh              # run from the repo root
+#   ./scripts/test-api.sh --no-install # skip npm install (faster re-runs)
+# ─────────────────────────────────────────────────────────────────────────────
 
-set -e
+set -o pipefail
 
-if [ $# -eq 0 ]; then
-    echo "Usage: $0 <API_URL>"
-    echo "Example: $0 https://abc123.execute-api.us-east-1.amazonaws.com/prod"
-    exit 1
+# ── Configuration ─────────────────────────────────────────────────────────────
+# Repo root is one directory up from this script
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+COMPONENTS=(
+  "lambda/upload"
+  "lambda/status"
+  "lambda/process-file"
+  "lambda/email"
+  "lambda/accounts"
+  "frontend"
+)
+
+# ── Flags ─────────────────────────────────────────────────────────────────────
+SKIP_INSTALL=false
+for arg in "$@"; do
+  case "$arg" in
+    --no-install) SKIP_INSTALL=true ;;
+    --help|-h)
+      echo "Usage: $0 [--no-install]"
+      echo "  --no-install   Skip 'npm install' in each component (faster re-runs)"
+      exit 0
+      ;;
+  esac
+done
+
+# ── Colours (disabled when stdout is not a terminal) ──────────────────────────
+if [ -t 1 ]; then
+  RED='\033[0;31m'
+  GREEN='\033[0;32m'
+  YELLOW='\033[1;33m'
+  CYAN='\033[0;36m'
+  BOLD='\033[1m'
+  DIM='\033[2m'
+  RESET='\033[0m'
+else
+  RED='' GREEN='' YELLOW='' CYAN='' BOLD='' DIM='' RESET=''
 fi
 
-API_URL=$1
-BASE_URL="${API_URL%/}"  # Remove trailing slash if present
+# ── Tracking arrays ──────────────────────────────────────────────────────────
+declare -a PASSED_COMPONENTS=()
+declare -a FAILED_COMPONENTS=()
+declare -a SKIPPED_COMPONENTS=()
 
-echo "Testing Library Catalog API at: $BASE_URL"
-echo "=================================================="
+TOTAL_TESTS=0
+TOTAL_PASSED=0
+TOTAL_FAILED=0
+START_TIME=$(date +%s)
 
-# Test 1: Upload endpoint with valid request
-echo "Test 1: POST /upload (valid request)"
-UPLOAD_RESPONSE=$(curl -s -X POST \
-  -H "Content-Type: application/json" \
-  -d '{
-    "fileName": "test-catalog.csv",
-    "fileSize": 1024,
-    "settings": {
-      "priceRounding": true,
-      "priceAdjustment": 2.50
-    }
-  }' \
-  "$BASE_URL/upload")
+# ── Helper functions ──────────────────────────────────────────────────────────
+separator() {
+  echo -e "${DIM}──────────────────────────────────────────────────────────────${RESET}"
+}
 
-echo "Response: $UPLOAD_RESPONSE"
+banner() {
+  echo ""
+  separator
+  echo -e "${CYAN}${BOLD}  $1${RESET}"
+  separator
+}
 
-# Extract jobId from response
-JOB_ID=$(echo $UPLOAD_RESPONSE | grep -o '"jobId":"[^"]*"' | cut -d'"' -f4)
-echo "Extracted Job ID: $JOB_ID"
+# Extract test counts from Jest or Vitest output.
+# Jest:   "Tests:  3 failed, 12 passed, 15 total"
+# Vitest: "Tests  12 failed | 149 passed (161)"
+parse_test_counts() {
+  local output="$1"
+  local passed=0 failed=0
+
+  # Try Jest format first
+  local jest_line
+  jest_line=$(echo "$output" | grep -E "Tests:.*passed.*total" | tail -1)
+  if [ -n "$jest_line" ]; then
+    passed=$(echo "$jest_line" | grep -oE '[0-9]+ passed' | grep -oE '[0-9]+' || echo 0)
+    failed=$(echo "$jest_line" | grep -oE '[0-9]+ failed'  | grep -oE '[0-9]+' || echo 0)
+    echo "$passed $failed"
+    return
+  fi
+
+  # Try Vitest format
+  local vitest_line
+  vitest_line=$(echo "$output" | grep -E "Tests.*passed" | tail -1)
+  if [ -n "$vitest_line" ]; then
+    passed=$(echo "$vitest_line" | grep -oE '[0-9]+ passed' | grep -oE '[0-9]+' || echo 0)
+    failed=$(echo "$vitest_line" | grep -oE '[0-9]+ failed'  | grep -oE '[0-9]+' || echo 0)
+    echo "$passed $failed"
+    return
+  fi
+
+  echo "0 0"
+}
+
+# ── Main loop ─────────────────────────────────────────────────────────────────
 echo ""
+echo -e "${BOLD}Libra Test Suite${RESET}"
+echo -e "${DIM}Running tests across ${#COMPONENTS[@]} components${RESET}"
 
-# Test 2: Upload endpoint with invalid file type
-echo "Test 2: POST /upload (invalid file type)"
-INVALID_RESPONSE=$(curl -s -X POST \
-  -H "Content-Type: application/json" \
-  -d '{
-    "fileName": "test.txt",
-    "fileSize": 1024,
-    "settings": {
-      "priceRounding": true
-    }
-  }' \
-  "$BASE_URL/upload")
+for component in "${COMPONENTS[@]}"; do
+  component_dir="$REPO_ROOT/$component"
+  component_name=$(basename "$component")
+  display_name="$component"
 
-echo "Response: $INVALID_RESPONSE"
-echo ""
+  banner "$display_name"
 
-# Test 3: Upload endpoint with file too large
-echo "Test 3: POST /upload (file too large)"
-LARGE_FILE_RESPONSE=$(curl -s -X POST \
-  -H "Content-Type: application/json" \
-  -d '{
-    "fileName": "large.csv",
-    "fileSize": 104857600,
-    "settings": {
-      "priceRounding": false
-    }
-  }' \
-  "$BASE_URL/upload")
+  # ── Guard: directory exists? ──
+  if [ ! -d "$component_dir" ]; then
+    echo -e "  ${YELLOW}⚠  Directory not found — skipping${RESET}"
+    SKIPPED_COMPONENTS+=("$display_name (directory missing)")
+    continue
+  fi
 
-echo "Response: $LARGE_FILE_RESPONSE"
-echo ""
+  # ── Guard: package.json exists? ──
+  if [ ! -f "$component_dir/package.json" ]; then
+    echo -e "  ${YELLOW}⚠  No package.json — skipping${RESET}"
+    SKIPPED_COMPONENTS+=("$display_name (no package.json)")
+    continue
+  fi
 
-# Test 4: Status endpoint with valid job ID
-if [ ! -z "$JOB_ID" ]; then
-    echo "Test 4: GET /status/$JOB_ID (valid job ID)"
-    STATUS_RESPONSE=$(curl -s -X GET "$BASE_URL/status/$JOB_ID")
-    echo "Response: $STATUS_RESPONSE"
-    echo ""
-fi
+  # ── Guard: test script exists? ──
+  has_test_script=$(node -e "
+    const pkg = require('$component_dir/package.json');
+    console.log(pkg.scripts && pkg.scripts.test ? 'yes' : 'no');
+  " 2>/dev/null || echo "no")
 
-# Test 5: Status endpoint with invalid job ID
-echo "Test 5: GET /status/invalid-job-id (invalid job ID)"
-INVALID_STATUS_RESPONSE=$(curl -s -X GET "$BASE_URL/status/invalid-job-id")
-echo "Response: $INVALID_STATUS_RESPONSE"
-echo ""
+  if [ "$has_test_script" = "no" ]; then
+    echo -e "  ${YELLOW}⚠  No \"test\" script in package.json — skipping${RESET}"
+    SKIPPED_COMPONENTS+=("$display_name (no test script)")
+    continue
+  fi
 
-# Test 6: CORS preflight request
-echo "Test 6: OPTIONS /upload (CORS preflight)"
-CORS_RESPONSE=$(curl -s -X OPTIONS \
-  -H "Origin: https://example.com" \
-  -H "Access-Control-Request-Method: POST" \
-  -H "Access-Control-Request-Headers: Content-Type" \
-  -v "$BASE_URL/upload" 2>&1)
+  cd "$component_dir"
 
-echo "Response headers:"
-echo "$CORS_RESPONSE" | grep -i "access-control"
-echo ""
-
-echo "API Testing Complete!"
-echo "=================================================="
-
-# Test file upload flow (if curl supports it)
-if command -v dd &> /dev/null && [ ! -z "$JOB_ID" ]; then
-    echo ""
-    echo "Optional: Test complete upload flow"
-    echo "1. Creating test CSV file..."
-    
-    # Create a small test CSV
-    cat > test-catalog.csv << EOF
-isbn,title,author,basePrice
-9781234567890,Test Book 1,Test Author 1,19.99
-9780987654321,Test Book 2,Test Author 2,24.95
-EOF
-    
-    echo "2. Getting upload URL..."
-    UPLOAD_URL=$(echo $UPLOAD_RESPONSE | grep -o '"uploadUrl":"[^"]*"' | cut -d'"' -f4)
-    
-    if [ ! -z "$UPLOAD_URL" ]; then
-        echo "3. Uploading file to S3..."
-        curl -X PUT \
-          -H "Content-Type: text/csv" \
-          --data-binary @test-catalog.csv \
-          "$UPLOAD_URL"
-        
-        echo ""
-        echo "4. File uploaded! Check status endpoint for processing updates."
-        echo "   curl -X GET $BASE_URL/status/$JOB_ID"
-        
-        # Cleanup
-        rm -f test-catalog.csv
-    else
-        echo "Could not extract upload URL"
+  # ── npm install ──
+  if [ "$SKIP_INSTALL" = false ]; then
+    echo -e "  ${DIM}Installing dependencies…${RESET}"
+    if ! npm install --silent 2>&1 | tail -1; then
+      echo -e "  ${RED}✗  npm install failed${RESET}"
+      FAILED_COMPONENTS+=("$display_name (install failed)")
+      continue
     fi
+  fi
+
+  # ── npm test ──
+  echo -e "  ${DIM}Running tests…${RESET}"
+  echo ""
+
+  test_output=$(npm test -- --no-coverage 2>&1) || true
+  exit_code=${PIPESTATUS[0]:-$?}
+
+  # Show the output
+  echo "$test_output"
+  echo ""
+
+  # Parse results
+  read -r comp_passed comp_failed <<< "$(parse_test_counts "$test_output")"
+  comp_passed=${comp_passed:-0}
+  comp_failed=${comp_failed:-0}
+  comp_total=$((comp_passed + comp_failed))
+
+  TOTAL_TESTS=$((TOTAL_TESTS + comp_total))
+  TOTAL_PASSED=$((TOTAL_PASSED + comp_passed))
+  TOTAL_FAILED=$((TOTAL_FAILED + comp_failed))
+
+  if [ "$comp_failed" -gt 0 ] || [ "$exit_code" -ne 0 ]; then
+    echo -e "  ${RED}✗  ${display_name}: ${comp_passed} passed, ${comp_failed} failed${RESET}"
+    FAILED_COMPONENTS+=("$display_name")
+  else
+    echo -e "  ${GREEN}✓  ${display_name}: ${comp_passed} passed${RESET}"
+    PASSED_COMPONENTS+=("$display_name")
+  fi
+
+  cd "$REPO_ROOT"
+done
+
+# ── Aggregated Summary ────────────────────────────────────────────────────────
+END_TIME=$(date +%s)
+ELAPSED=$((END_TIME - START_TIME))
+MINUTES=$((ELAPSED / 60))
+SECONDS=$((ELAPSED % 60))
+
+echo ""
+echo ""
+echo -e "${BOLD}═══════════════════════════════════════════════════════════════${RESET}"
+echo -e "${BOLD}  TEST SUITE SUMMARY${RESET}"
+echo -e "${BOLD}═══════════════════════════════════════════════════════════════${RESET}"
+echo ""
+
+if [ ${#PASSED_COMPONENTS[@]} -gt 0 ]; then
+  echo -e "  ${GREEN}${BOLD}Passed (${#PASSED_COMPONENTS[@]}):${RESET}"
+  for c in "${PASSED_COMPONENTS[@]}"; do
+    echo -e "    ${GREEN}✓${RESET}  $c"
+  done
+  echo ""
 fi
+
+if [ ${#FAILED_COMPONENTS[@]} -gt 0 ]; then
+  echo -e "  ${RED}${BOLD}Failed (${#FAILED_COMPONENTS[@]}):${RESET}"
+  for c in "${FAILED_COMPONENTS[@]}"; do
+    echo -e "    ${RED}✗${RESET}  $c"
+  done
+  echo ""
+fi
+
+if [ ${#SKIPPED_COMPONENTS[@]} -gt 0 ]; then
+  echo -e "  ${YELLOW}${BOLD}Skipped (${#SKIPPED_COMPONENTS[@]}):${RESET}"
+  for c in "${SKIPPED_COMPONENTS[@]}"; do
+    echo -e "    ${YELLOW}⚠${RESET}  $c"
+  done
+  echo ""
+fi
+
+separator
+echo -e "  ${BOLD}Tests:${RESET}       ${TOTAL_PASSED} passed, ${TOTAL_FAILED} failed, $((TOTAL_PASSED + TOTAL_FAILED)) total"
+echo -e "  ${BOLD}Components:${RESET}  ${#PASSED_COMPONENTS[@]} passed, ${#FAILED_COMPONENTS[@]} failed, ${#SKIPPED_COMPONENTS[@]} skipped"
+echo -e "  ${BOLD}Duration:${RESET}    ${MINUTES}m ${SECONDS}s"
+separator
+echo ""
+
+# ── Exit code ─────────────────────────────────────────────────────────────────
+if [ ${#FAILED_COMPONENTS[@]} -gt 0 ]; then
+  exit 1
+fi
+exit 0
