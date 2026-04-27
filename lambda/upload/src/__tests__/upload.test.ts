@@ -300,6 +300,7 @@ describe('Malformed JSON body', () => {
     );
     expect(result.statusCode).toBe(500);
   });
+});
 
 // =============================================================================
 // JOB RECORD CREATION IN DYNAMODB
