@@ -16,6 +16,7 @@
 - [Testing](#testing)
 - [Deployment](#deployment)
 - [Developer Instructions](#developer-instructions)
+- [Team Members](#team-members)
 
 
 ## Synopsis
@@ -127,7 +128,27 @@ User flow of Pages:
 
 ## Testing
 
-**[Testing documentation and setup instructions to be added]**
+Libra contains several automated tests that can be run, totalling 230 automated unit tests covering all lambda functions and the react frontend. These tests should be run after every code change, in order to catch regressions before deploying. No AWS credentials or internet connection are required. All AWS calls are mocked.
+
+To run all suites:
+
+(cd lambda/accounts && npm test) && \
+(cd lambda/upload && npm test) && \
+(cd lambda/status && npm test) && \
+(cd frontend && npm test)
+
+
+ - Verify - Each suite prints a summary table when it finishes. A passing run looks like this:
+
+Tests:		    57 passed, 57 total
+
+Test suites:	1 passed, 1 total
+
+
+- Note - If a test fails, the output will identify the test name, the expected value, and the actual value received. 
+If a update needs to be made a fix to all underlying code issues should be made before deploying. 
+
+- Do not delete or skip failing tests.
 
 ## Deployment
 
@@ -157,5 +178,24 @@ Sprint 8: Implemented additional catalog data upload features and additional acc
 
 Sprint 9: Implemented testing functions for all major processes, additional minor improvements and refinements are also made.
 
+## Team Members
 
+Name:     Harman Bassi
 
+Contact:  HarmanBassi@csus.edu
+
+Name:     Serhii Demchuk
+
+Contact:  sdemchuk@csus.edu
+
+Name:     Nicolas Schallock
+
+Contact:  nicolasschallock@csus.edu
+
+Name:     Aidan Payne
+
+Contact:  aidenpayne@csus.edu
+
+Name:     Nicholas Edenfield
+
+Contact:  nicholasedenfield@csus.edu
