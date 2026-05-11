@@ -132,9 +132,12 @@ Libra contains several automated tests that can be run, totalling 230 automated 
 
 To run all suites:
 
-(cd lambda/accounts && npm test) && \
-(cd lambda/upload && npm test) && \
-(cd lambda/status && npm test) && \
+(cd lambda/accounts && npm test) && \\
+
+(cd lambda/upload && npm test) && \\
+
+(cd lambda/status && npm test) && \\
+
 (cd frontend && npm test)
 
 
