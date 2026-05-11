@@ -47,6 +47,7 @@ The application features secure user authentication, file upload capabilities fo
 ### ERD Backend
 <img width="2386" height="1549" alt="ERD BACKEND" src="https://github.com/user-attachments/assets/aa8d649e-df1a-4b6a-b646-608257750524" />
 
+
 ## Features
 
 **Authentication & Security**
@@ -102,16 +103,34 @@ User flow of Pages:
 ### Accessing the Application
 
 1. **Login**: Use the login page to authenticate with your credentials
-<img width="681" height="782" alt="image" src="https://github.com/user-attachments/assets/c2ddcb0f-a8ca-4cfe-bd21-5dec5a91b74b" />
+<img width="601" height="782" alt="image" src="https://github.com/user-attachments/assets/f349f511-ef7e-4cf2-b47c-4565291e0035" />
 
 2. **Dashboard**: Navigate to the main dashboard after successful login
-<img width="2210" height="744" alt="image" src="https://github.com/user-attachments/assets/50ed2384-5e15-4a85-8e89-e444f728e130" />
+<img width="2210" height="786" alt="image" src="https://github.com/user-attachments/assets/8bd3a464-10b5-462e-89cc-8a47e5eb6f45" />
+
 
 3. **Upload Catalog Data**: Use the "Upload Catalog Data" section to process library files
-<img width="1908" height="880" alt="image" src="https://github.com/user-attachments/assets/c41752ac-87e7-495f-99c1-d2fecdff7fef" />
+<img width="3720" height="818" alt="image" src="https://github.com/user-attachments/assets/186ebff1-b23a-4330-8187-c021057dd966" />
 
-4. **Account Management**: Manage user accounts through the account management interface
-<img width="1908" height="701" alt="image" src="https://github.com/user-attachments/assets/f2e7647a-ae12-437e-a174-c116d8209a5c" />
+4. **Change Output Parameters**: Use the "Parameter Settings" section to process library files
+<img width="3720" height="1230" alt="image" src="https://github.com/user-attachments/assets/bd772aad-3689-45b8-b9c8-15fb9ef789dd" />
+
+5. **Download and optionally view/edit the results**: Use the "Downloaded Exported Data" to download the file and re-upload it to view and edit
+<img width="3720" height="1202" alt="image" src="https://github.com/user-attachments/assets/d572eec1-0bf2-42ac-b5dd-33236ec4da2e" />
+
+6. **Edit and Filter Raw Output Data**: Use the "Parameter Settings" section to edit returned catalog files
+<img width="3720" height="1366" alt="image" src="https://github.com/user-attachments/assets/0e065761-8689-41c3-9a2b-c8f63dbee886" />
+
+7. **Account Management**: Manage user accounts through the account management interface
+<img width="3720" height="1252" alt="image" src="https://github.com/user-attachments/assets/8083518a-702d-41ec-9f75-19a532ca84a7" />
+<img width="3720" height="866" alt="image" src="https://github.com/user-attachments/assets/1c731a90-8aad-4815-a481-dc035bf10899" />
+<img width="3720" height="1198" alt="image" src="https://github.com/user-attachments/assets/0e65ddd8-a298-4d78-9a23-9841ea89eff9" />
+
+8. **Create New Accounts Easily**: Use the "Create Account" button on the navigation bar to instantly access an account creation interface
+<img width="3720" height="124" alt="image" src="https://github.com/user-attachments/assets/804df4c5-186a-4822-96c3-559a4fb1bb4f" />
+<img width="601" height="700" alt="image" src="https://github.com/user-attachments/assets/ea4e6392-eb46-405e-9bd6-68b31660cdc8" />
+
+
 
 ### File Upload Process
 
@@ -197,7 +216,7 @@ Contact:  nicolasschallock@csus.edu
 
 Name:     Aidan Payne
 
-Contact:  aidenpayne@csus.edu
+Contact:  adpayne2@csus.edu
 
 Name:     Nicholas Edenfield
 
