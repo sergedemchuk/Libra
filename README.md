@@ -134,16 +134,17 @@ User flow of Pages:
 
 ### File Upload Process
 
-1. Select a catalog file from your Destiny library system
+1. Select a catalog file exported from Destiny containing, at minimum, ISBNs and pricing data (incomplete or otherwise)
 2. Configure processing options (pricing adjustments, rounding preferences)
 3. Monitor upload progress with real-time status updates
 4. Download processed results when complete
+5. (Optional) Reupload Libra file output at anytime to view, filter, and edit the output data.
 
-### Account Management
+### Account Management (Limited to Administrator Accounts)
 
 - Create new user accounts
 - Manage existing user permissions
-- Configure system settings
+- Configure notification settings
 
 ## Testing
 
