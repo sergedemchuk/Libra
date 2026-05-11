@@ -139,25 +139,23 @@ User flow of Pages:
 
 ## TimeLine of Key Milestones:
 
-### Completed
+Sprint 1: Setup of the Jira work environment and other tools used for this project.
 
-Sprint 1: Setup of the Jira work environment and other tools used for this project
+Sprint 2: Initialization of project files coupled with the implementation Tailwind CSS configuration and the products background screen.
 
-Sprint 2: Initialization of project files coupled with the implementation Tailwind CSS configuration and the products background screen
+Sprint 3: Implemented the general page layout including text and graphical elements.
 
-Sprint 3: Implemented the general page layout including text and graphical elements
+Sprint 4: Impelemnted catalog data upload features.
 
-Sprint 4: Implemented some AWS functionality as well as additional graphical elements as well as some button implementation.
+Sprint 5: Implemented login and logout features.
 
-### To-Do
+Sprint 6: Implemented Account management features and displays.
 
-Sprint 5: Implementation of key login screen functions
+Sprint 7: Implemented account creation features and additional account management utitlities.
 
-Sprint 6: Implementation of Account Management user features and tools
+Sprint 8: Implemented additional catalog data upload features and additional account management/creation features.
 
-Sprint 7: Implementation of Account Management core functionality, enabling the creation, alteration and deletion.
-
-Sprint 8: Implementation of the catalog Data Pages' menu functionality and features
+Sprint 9: Implemented testing functions for all major processes, additional minor improvements and refinements are also made.
 
 
 
