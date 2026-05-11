@@ -1,7 +1,7 @@
 # Libra
 
-[![Build Status](https://img.shields.io/badge/build-In_Progress-yellow.svg)](https://github.com/sergedemchuk/libra/actions)
-[![Version](https://img.shields.io/badge/version-0.0.3-orange.svg)](https://github.com/sergedemchuk/libra/releases)
+[![Build Status](https://img.shields.io/badge/build-In_Progress-green.svg)](https://github.com/sergedemchuk/libra/actions)
+[![Version](https://img.shields.io/badge/version-0.1.0-green.svg)](https://github.com/sergedemchuk/libra/releases)
 
 <img width="913" height="324" alt="image" src="https://github.com/user-attachments/assets/32332608-623f-4617-a830-c7316e5bddb4" />
 
@@ -15,7 +15,7 @@
 - [Usage](#usage)
 - [Testing](#testing)
 - [Deployment](#deployment)
-- [Developer Instructions](#developer-instructions)
+- [Deployed Structure](#deployed-structure)
 - [Team Members](#team-members)
 
 
@@ -45,7 +45,9 @@ The application features secure user authentication, file upload capabilities fo
 - **Storage**: S3 Buckets, DynamoDB 
 - **Processing**: Lambda
 ### ERD Backend
-<img width="2386" height="1549" alt="ERD BACKEND" src="https://github.com/user-attachments/assets/aa8d649e-df1a-4b6a-b646-608257750524" />
+
+<img width="1736" height="725" alt="image" src="https://github.com/user-attachments/assets/e536701b-e0cf-4ec8-86d7-92dd07f5ece8" />
+
 
 
 ## Features
@@ -93,7 +95,8 @@ npm run dev
 ```
 
 Visit `http://localhost:3000` to access the application.(Default Value)
-
+You will need a deployed backend API key to access farther than the login screen*
+Or access official version at libralibri.org
 
 ## Usage
 User flow of Pages:
@@ -150,14 +153,16 @@ User flow of Pages:
 
 Libra contains several automated tests that can be run, totalling 230 automated unit tests covering all lambda functions and the react frontend. These tests should be run after every code change, in order to catch regressions before deploying. No AWS credentials or internet connection are required. All AWS calls are mocked.
 
-To run all suites:
-
+To run all suites run file at:
+./scripts/test-api.sh
+ 
+To test individual components:
 (cd lambda/accounts && npm test) && \\
-
+ 
 (cd lambda/upload && npm test) && \\
-
+ 
 (cd lambda/status && npm test) && \\
-
+ 
 (cd frontend && npm test)
 
 
@@ -175,11 +180,69 @@ If a update needs to be made a fix to all underlying code issues should be made 
 
 ## Deployment
 
-**[Deployment guides, infrastructure setup, and environment-specific configurations to be documented]**
+Libra runs on an AWS-backed stack provisioned with AWS CDK. The steps below cover a first-time deploy from a clean clone.
+ 
+### Prerequisites
+ 
+- AWS account with CLI credentials configured (`aws configure`)
+- Node.js 20+ and npm
+- AWS CDK v2 installed globally (`npm install -g aws-cdk`)
+- An ISBNdb API key stored in AWS Secrets Manager under the name `isbndb-api-key`
+- SES-verified sender and admin email addresses (in SES sandbox mode, recipients must also be verified)
+### 1. Build the Lambda functions
+ 
+CDK packages each Lambda's compiled output, so every function must be built first:
+ 
+```bash
+for dir in lambda/accounts lambda/upload lambda/status lambda/process-file lambda/email; do
+  (cd "$dir" && npm install && npm run build)
+done
+```
+ 
+### 2. Deploy the backend stack
+ 
+```bash
+cd infrastructure
+npm install
+npx cdk bootstrap    # first time only, per AWS account/region
+npm run deploy
+```
+ 
+When the stack finishes, CDK prints a `FrontendConfig` output containing the API URL, region, and API ID — you'll need these values for the frontend build.
+ 
+### 3. Build and host the frontend
+ 
+```bash
+cd ../frontend
+npm install
+npm run build
+```
+ 
+Upload the contents of `frontend/dist/` to your static host (S3 + CloudFront, or any equivalent).
+ 
+### Updating a single Lambda
+ 
+To push a code change to one function without re-running the full CDK deploy:
+ 
+```bash
+cd lambda/<name>
+npm run package
+npm run deploy
+```
+ 
+### Tearing the stack down
+ 
+```bash
+cd infrastructure
+npm run destroy
+```
+ 
+ 
 
-## Developer Instructions
+## Deployed Structure
 
-**[Comprehensive developer guides, API references, architecture diagrams, and contribution guidelines to be expanded]**
+<img width="2849" height="1054" alt="image" src="https://github.com/user-attachments/assets/8959cce4-e757-4cb9-bfe0-7abe75d6e784" />
+
 
 ## TimeLine of Key Milestones:
 
