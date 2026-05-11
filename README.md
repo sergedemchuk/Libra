@@ -127,7 +127,7 @@ User flow of Pages:
 <img width="3720" height="1198" alt="image" src="https://github.com/user-attachments/assets/0e65ddd8-a298-4d78-9a23-9841ea89eff9" />
 
 8. **Create New Accounts Easily**: Use the "Create Account" button on the navigation bar to instantly access an account creation interface
-<img width="3720" height="124" alt="image" src="https://github.com/user-attachments/assets/804df4c5-186a-4822-96c3-559a4fb1bb4f" />
+<img width="601" height="40" alt="image" src="https://github.com/user-attachments/assets/255155f8-b9e7-4e9a-b425-cafd884db6d8" />
 <img width="601" height="700" alt="image" src="https://github.com/user-attachments/assets/ea4e6392-eb46-405e-9bd6-68b31660cdc8" />
 
 
